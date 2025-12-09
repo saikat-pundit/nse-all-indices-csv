@@ -1,5 +1,15 @@
 import requests
 import pandas as pd
+import json
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'
+}
+
+url = "https://www.nseindia.com/api/allIndices"
+
+response = requests.get(url, headers=headers)
+data = response.json()
 
 target_indices = [
     "NIFTY 50",
@@ -29,14 +39,6 @@ target_indices = [
     "NIFTY PSE"
 ]
 
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'
-}
-
-url = "https://www.nseindia.com/api/allIndices"
-response = requests.get(url, headers=headers)
-data = response.json()
-
 records = []
 for item in data['data']:
     index_name = item.get('index')
@@ -44,17 +46,17 @@ for item in data['data']:
     if index_name in target_indices:
         try:
             advances = int(item.get('advances', 0))
-        except:
+        except (ValueError, TypeError):
             advances = 0
         
         try:
             declines = int(item.get('declines', 0))
-        except:
+        except (ValueError, TypeError):
             declines = 0
         
         try:
             unchanged = int(item.get('unchanged', 0))
-        except:
+        except (ValueError, TypeError):
             unchanged = 0
         
         if declines != 0:
