@@ -1,4 +1,4 @@
-name: Daily Update NSE Indices CSV
+name: NIFTY50_TOP10
 
 on:
   schedule:
