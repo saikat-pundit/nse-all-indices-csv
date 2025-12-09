@@ -16,15 +16,28 @@ data = response.json()
 # Convert to simple list
 records = []
 for item in data['data']:
+    advances = item.get('advances', 0)
+    declines = item.get('declines', 0)
+    unchanged = item.get('unchanged', 0)
+    
+    # Calculate Advances/Declines ratio
+    # Avoid division by zero - if declines is 0, handle it appropriately
+    if declines != 0:
+        adv_dec_ratio = advances / declines
+        adv_dec_ratio_str = f"{adv_dec_ratio:.2f}"  # Format to 2 decimal places
+    else:
+        if advances > 0:
+            adv_dec_ratio_str = "∞"  # Infinity symbol if advances > 0 and declines = 0
+        else:
+            adv_dec_ratio_str = "0"  # 0/0 case
+    
     records.append({
         'Index Name': item.get('index'),
         'Last': item.get('last'),
         'Change': item.get('variation'),
         '% Change': item.get('percentChange'),
         'Previous Close': item.get('previousClose'),
-        'Advances': item.get('advances'),
-        'Declines': item.get('declines'),
-        'Unchanged': item.get('unchanged'),
+        'Adv/Dec Ratio': adv_dec_ratio_str,
         'Year High': item.get('yearHigh'),
         'Year Low': item.get('yearLow')
     })
