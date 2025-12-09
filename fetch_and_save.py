@@ -41,7 +41,7 @@ for item in data['data']:
         if advances > 0:
             adv_dec_ratio_str = "∞"  # Infinity symbol if advances > 0 and declines = 0
         else:
-            adv_dec_ratio_str = "0"  # 0/0 case
+            adv_dec_ratio_str = "-"  # 0/0 case
     
     records.append({
         'Index Name': item.get('index'),
