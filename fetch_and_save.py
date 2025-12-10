@@ -1,6 +1,8 @@
 import requests
 import pandas as pd
 import json
+from datetime import datetime
+import pytz
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'
@@ -142,6 +144,22 @@ for index_name in target_indices:
             'Year High': '-',
             'Year Low': '-'
         })
+
+# Add timestamp row
+ist = pytz.timezone('Asia/Kolkata')
+current_time = datetime.now(ist).strftime('%d-%b-%Y %H:%M:%S')
+
+# Add timestamp as last row with proper formatting
+records.append({
+    'Index Name': 'Updated Time:',
+    'Last': current_time,
+    'Change': '',
+    '% Change': '',
+    'Previous Close': '',
+    'Adv/Dec Ratio': '',
+    'Year High': '',
+    'Year Low': ''
+})
 
 df = pd.DataFrame(records)
 df.to_csv('nse_all_indices.csv', index=False)
