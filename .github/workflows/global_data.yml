@@ -1,16 +1,16 @@
-name: Update Global Data
+name: Update Global Market Data
 
 on:
   schedule:
-    # Runs at 10:30 AM, 2:30 PM, and 4:30 PM IST (Monday–Friday)
-    - cron: '30 5,10,11 * * 1-5'
+    # Runs at 10:30 AM, 2:30 PM, and 4:30 PM IST (Mon–Fri)
+    - cron: "30 5,10,11 * * 1-5"
   workflow_dispatch:
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,27 +21,26 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Force upgrade yfinance (required for scraper backend)
-        run: |
-          pip install --upgrade --no-cache-dir yfinance
+      # Mandatory: GitHub Actions often has outdated cached yfinance
+      - name: Force install latest yfinance
+        run: pip install --upgrade --no-cache-dir yfinance pandas
 
-      - name: Install dependencies from requirements.txt
+      - name: Install other dependencies
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run global data script
-        id: run-script
         run: python global_data.py
 
-      - name: Show output file
+      - name: Display output preview
         run: |
-          echo "CSV file created:"
+          echo "===== FIRST LINES ====="
           head -10 GLOBAL_DATA.csv || true
-          echo "..."
-          tail -5 GLOBAL_DATA.csv || true
+          echo "===== LAST LINES ====="
+          tail -10 GLOBAL_DATA.csv || true
 
-      - name: Commit & push CSV updates
+      - name: Commit & push CSV update
         if: success()
         run: |
           git config user.name "github-actions"
