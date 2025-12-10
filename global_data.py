@@ -80,7 +80,7 @@ def fetch_global_data():
     # Add timestamp
     timestamp = datetime.now().strftime("%d-%b-%Y %H:%M")
     with open(filename, "a") as f:
-        f.write(f,,,,"Update Time:,{timestamp}\n")
+        f.write(f"Update Time:,,,,,{timestamp}\n")
     
     # Print stats
     elapsed = (datetime.now() - start_time).total_seconds()
