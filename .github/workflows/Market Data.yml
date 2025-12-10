@@ -1,0 +1,31 @@
+name: Daily Market Data Update
+
+on:
+  schedule:
+    - cron: '*/10 2-8 * * 1-5'   # Every 10 minutes from 8 AM to 4 PM IST (Monday-Friday)
+  workflow_dispatch:              # Allows you to run it manually anytime
+
+jobs:
+  update-market-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pandas requests
+
+      - name: Run market data script
+        run: python market_data.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git add market_data.csv
+          git commit -m "Auto update market data $(date)" || exit 0
+          git push
