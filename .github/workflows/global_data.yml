@@ -2,7 +2,7 @@ name: Update Global Data
 
 on:
   schedule:
-    # Runs at 10:30 AM, 2:30 PM, and 4:30 PM IST (Monday-Friday)
+    # Runs at 10:30 AM, 2:30 PM, and 4:30 PM IST (Monday–Friday)
     - cron: '30 5,10,11 * * 1-5'
   workflow_dispatch:
 
@@ -14,25 +14,39 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          cache: 'pip'  # Automatic pip caching
-      
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Force upgrade yfinance (required for scraper backend)
+        run: |
+          pip install --upgrade --no-cache-dir yfinance
+
       - name: Install dependencies from requirements.txt
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt  # Uses cached packages
-      
+          pip install -r requirements.txt
+
       - name: Run global data script
-        run: python global_data.py
         id: run-script
-      
+        run: python global_data.py
+
       - name: Show output file
         run: |
           echo "CSV file created:"
-          head -5 GLOBAL_DATA.csv
+          head -10 GLOBAL_DATA.csv || true
           echo "..."
-          tail -3 GLOBAL_DATA.csv
+          tail -5 GLOBAL_DATA.csv || true
+
+      - name: Commit & push CSV updates
+        if: success()
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add GLOBAL_DATA.csv
+          git commit -m "Auto-update GLOBAL_DATA.csv" || echo "No changes to commit"
+          git push
+        continue-on-error: true
