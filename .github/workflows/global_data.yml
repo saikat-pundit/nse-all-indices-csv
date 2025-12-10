@@ -2,50 +2,63 @@ name: Update Global Market Data
 
 on:
   schedule:
-    # Runs at 10:30 AM, 2:30 PM, and 4:30 PM IST (Mon–Fri)
-    - cron: "30 5,10,11 * * 1-5"
+    # Reduced to twice a day during active hours
+    - cron: "30 6,11 * * 1-5"  # 12 PM & 5 PM IST (6:30 & 11:30 UTC)
   workflow_dispatch:
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3  # Reduced from 5
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Setup Python (WITH CACHING)
+        uses: actions/setup-python@v4
         with:
           python-version: "3.12"
-          cache: "pip"
+          cache: "pip"  # Auto-cache pip packages
 
-      # Mandatory: GitHub Actions often has outdated cached yfinance
-      - name: Force install latest yfinance
-        run: pip install --upgrade --no-cache-dir yfinance pandas
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-      - name: Install other dependencies
+      # MINIMAL INSTALLATION - no unnecessary upgrades
+      - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements.txt ]; then 
+            pip install -r requirements.txt --quiet
+          else
+            pip install yfinance==0.2.40 pandas==2.2.0 --quiet
+          fi
 
-      - name: Run global data script
-        run: python global_data.py
+      # CRITICAL: Set timeout for yfinance calls
+      - name: Run optimized script
+        run: timeout 120 python global_data.py  # 2 minute timeout
 
-      - name: Display output preview
+      - name: Quick file check
         run: |
-          echo "===== FIRST LINES ====="
-          head -10 GLOBAL_DATA.csv || true
-          echo "===== LAST LINES ====="
-          tail -10 GLOBAL_DATA.csv || true
+          echo "File created:"
+          ls -la GLOBAL_DATA.csv 2>/dev/null || echo "No CSV created"
+          echo -e "\nFirst 3 lines:"
+          head -3 GLOBAL_DATA.csv 2>/dev/null || echo "Cannot read file"
 
-      - name: Commit & push CSV update
+      - name: Commit & push (FAST)
         if: success()
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add GLOBAL_DATA.csv
-          git commit -m "Auto-update GLOBAL_DATA.csv" || echo "No changes to commit"
-          git push
-        continue-on-error: true
+          # Only commit if file has content
+          if [ -s GLOBAL_DATA.csv ]; then
+            git commit -m "Auto-update $(date +'%H:%M')" -m "via GitHub Actions"
+            git push
+          else
+            echo "CSV is empty, skipping commit"
+          fi
