@@ -35,7 +35,7 @@ jobs:
           if [ -f requirements.txt ]; then 
             pip install -r requirements.txt --quiet
           else
-            pip install yfinance==0.2.40 pandas==2.2.0 --quiet
+            pip install yfinance pandas --quiet
           fi
 
       # CRITICAL: Set timeout for yfinance calls
