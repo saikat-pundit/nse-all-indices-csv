@@ -11,7 +11,7 @@ TICKERS = {
     "VIX": "^VIX",
     "Dollar Index": "DX-Y.NYB",
     "US 10-Year Yield": "^TNX",
-    "Nikkei 225": "^N225",
+    "Nikkei 225": "NIY=F",
     "Euro Stoxx 50": "^STOXX50E",
     "FTSE 100": "^FTSE",
     "Gold Comex": "GC%3DF",
