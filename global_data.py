@@ -66,7 +66,7 @@ def fetch_global_data():
         return
 
     df_out = pd.DataFrame(records)
-    filename = "GLOBAL_DATA.csv"
+    filename = "../Data/GLOBAL_DATA.csv"
     df_out.to_csv(filename, index=False)
     
     # Add timestamp row
