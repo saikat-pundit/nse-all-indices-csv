@@ -59,11 +59,11 @@ def fetch_global_data():
 
         print(f"  ✓ {last:.2f} ({percent:+.2f}%)")
 
-    if not records:
+        if not records:
         print("\n‼️ ERROR: No data fetched!")
         return
 
-        df_out = pd.DataFrame(records)
+    df_out = pd.DataFrame(records)
     filename = "GLOBAL_DATA.csv"
     df_out.to_csv(filename, index=False)
     
