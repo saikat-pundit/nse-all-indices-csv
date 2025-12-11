@@ -16,6 +16,7 @@ TICKERS = {
     "FTSE 100": "^FTSE",
     "Gold Comex": "GC%3DF",
     "Silver Comex": "SI=F",
+    "Brent Crude Oil": "BZ%3DF",
     "Bitcoin": "BTC-USD",
     "USD/INR": "INR=X",
     "USD/JPY": "JPY=X",
