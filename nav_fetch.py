@@ -35,5 +35,5 @@ for fund in data['data']:
             })
 
 df = pd.DataFrame(records)
-df.to_csv('Daily_NAV.csv', index=False)
+df.to_csv('../Data/Daily_NAV.csv', index=False)
 print(f"CSV created successfully for date: {target_date_str}!")
