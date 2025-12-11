@@ -72,7 +72,7 @@ def fetch_global_data():
     ist = pytz.timezone('Asia/Kolkata')
     timestamp = datetime.now(ist).strftime("%d-%b %H:%M")
     with open(filename, 'a') as f:
-        f.write(f',,,,,,Update Time:,{timestamp}\n')
+        f.write(f',,,,,Update Time:,{timestamp}\n')
     
     timestamp = datetime.now(ist).strftime("%d-%b-%Y %H:%M")
     print(f"\nSaved to {filename} at {timestamp}")
