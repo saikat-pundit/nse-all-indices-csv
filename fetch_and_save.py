@@ -156,8 +156,8 @@ if 'data' in data_commodities and 'list' in data_commodities['data']:
                     '% Change': f"{price_change_percentage}%",
                     'Previous Close': round(previous_close, 2),
                     'Adv/Dec Ratio': '-',
-                    'Year High': '-',
-                    'Year Low': '-'  
+                    'Year High': last_price,  # Using current price since no historical
+                    'Year Low': last_price    # Using current price since no historical
                 }
             except (ValueError, TypeError) as e:
                 print(f"Error processing {symbol}: {e}")
