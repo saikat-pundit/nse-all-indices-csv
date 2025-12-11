@@ -2,28 +2,31 @@ name: NIFTY50_TOP10
 
 on:
   schedule:
-    - cron: '*/10 2-8 * * 1-5'   # Every 10 minutes from 8 AM to 4 PM IST (Monday-Friday)
-  workflow_dispatch:              # Allows you to run it manually anytime
+    - cron: '*30 2-8 * * 1-5'
+  workflow_dispatch:
 
 jobs:
   update-csv:
     runs-on: ubuntu-latest
+    
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python with CACHE
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
+          cache: 'pip'  # ⭐ CRITICAL: Enables dependency caching
 
-      - name: Install pandas
-        run: pip install pandas requests
+      - name: Install dependencies from requirements.txt
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt  # Uses cached packages
 
-      - name: Run indices script
-        run: python fetch_and_save.py
-
-      - name: Run NIFTY 50 stocks script
-        run: python nifty50_top10.py
+      - name: Run both scripts
+        run: |
+          python fetch_and_save.py
+          python nifty50_top10.py
 
       - name: Commit and push if changed
         run: |
