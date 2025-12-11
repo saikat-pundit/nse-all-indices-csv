@@ -52,7 +52,7 @@ for symbol in target_symbols:
         records.append(symbol_dict[symbol])
 os.makedirs('../Data', exist_ok=True)
 df = pd.DataFrame(records)
-filename = '../Data/nifty50_stocks_top10.csv'
+filename = 'Data/nifty50_stocks_top10.csv'
 df.to_csv(filename, index=False)
 
 # Add timestamp row
