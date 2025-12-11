@@ -23,7 +23,7 @@ target_indices = [
     "NIFTY 50",
     "INDIA VIX",
     "GIFT-NIFTY",
-    "USDINR",
+    "USD/INR",
     "NIFTY 10 YR BENCHMARK G-SEC",
     "NIFTY NEXT 50",
     "NIFTY MIDCAP SELECT",
@@ -115,7 +115,7 @@ if 'giftnifty' in data_market:
 # Add USDINR data
 for item in data_market['marketState']:
     if item.get('market') == 'currencyfuture':
-        index_dict['USDINR'] = {
+        index_dict['USD/INR'] = {
             'Index Name': 'USDINR',
             'Last': item.get('last', '-'),
             'Change': '-',
