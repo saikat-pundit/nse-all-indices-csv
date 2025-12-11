@@ -1,81 +1,64 @@
-import yfinance as yf
+import requests
 import pandas as pd
 from datetime import datetime
 import pytz
 
-# Tickers
-TICKERS = {
-    "Dow Jones": "YM%3DF",
-    "S&P 500": "ES%3DF",
-    "NASDAQ 100": "NQ%3DF",
-    "VIX": "^VIX",
-    "Dollar Index": "DX-Y.NYB",
-    "US 10-Year Yield": "^TNX",
-    "Nikkei 225": "^N225",
-    "Euro Stoxx 50": "^STOXX50E",
-    "FTSE 100": "^FTSE",
-    "Gold Comex": "GC%3DF",
-    "Silver Comex": "SI=F",
-    "Bitcoin": "BTC-USD",
-    "USD/INR": "INR=X",
-    "USD/JPY": "JPY=X",
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'
 }
 
-def fetch_global_data():
-    print("Fetching global data...\n")
+url = "https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%2050"
 
-    records = []
+response = requests.get(url, headers=headers)
+data = response.json()
 
-    for name, ticker in TICKERS.items():
-        print(f"Fetching {name} ({ticker})...")
+target_symbols = [
+    "RELIANCE",
+    "HDFCBANK", 
+    "BHARTIARTL",
+    "TCS",
+    "ICICIBANK",
+    "SBIN",
+    "INFY",
+    "BAJFINANCE",
+    "LT",
+    "HINDUNILVR"
+]
 
-        # MOST STABLE METHOD FOR GITHUB ACTIONS
-        df = yf.download(ticker, period="5d", interval="1d", progress=False)
-
-        if df.empty or len(df) < 2:
-            print(f"  ⚠️ No data for {name}")
-            continue
-
-        # Get last & previous close as FLOATS
-        last = float(df["Close"].iloc[-1])
-        prev = float(df["Close"].iloc[-2])
-
-        change = last - prev
-        percent = (change / prev * 100) if prev != 0 else 0
-
-        # 1-year high/low
-        yearly = yf.download(ticker, period="1y", interval="1d", progress=False)
-        high = float(yearly["High"].max()) if not yearly.empty else last
-        low = float(yearly["Low"].min()) if not yearly.empty else last
-
-        records.append({
-            "Index Name": name,
-            "Last": round(last, 2),            
-            "Change": round(change, 2),
-            "% Change": f"{percent:+.2f}%",
-            "Previous Close": round(prev, 2),
-            "Year High": round(high, 2),
-            "Year Low": round(low, 2),
-        })
-
-        print(f"  ✓ {last:.2f} ({percent:+.2f}%)")
-
-    if not records:
-        print("\n‼️ ERROR: No data fetched!")
-        return
-
-    df_out = pd.DataFrame(records)
-    filename = "GLOBAL_DATA.csv"
-    df_out.to_csv(filename, index=False)
+symbol_dict = {}
+for item in data['data']:
+    symbol = item.get('symbol')
     
-    # Add timestamp row
-    ist = pytz.timezone('Asia/Kolkata')
-    timestamp = datetime.now(ist).strftime("%d-%b %H:%M")
-    with open(filename, 'a') as f:
-        f.write(f',,,,,Update Time:,{timestamp}\n')
-    
-    timestamp = datetime.now(ist).strftime("%d-%b-%Y %H:%M")
-    print(f"\nSaved to {filename} at {timestamp}")
+    if symbol in target_symbols:
+        pchange = item.get('pChange')
+        if pchange is not None:
+            percent_change_str = f"{pchange}%"
+        else:
+            percent_change_str = ""
+        
+        symbol_dict[symbol] = {
+            'Symbol': symbol,
+            'Last': item.get('lastPrice'),
+            'Change': item.get('change'),
+            '% Change': percent_change_str,
+            'Previous Close': item.get('previousClose'),
+            'Year High': item.get('yearHigh'),
+            'Year Low': item.get('yearLow')
+        }
 
-if __name__ == "__main__":
-    fetch_global_data()
+records = []
+for symbol in target_symbols:
+    if symbol in symbol_dict:
+        records.append(symbol_dict[symbol])
+
+df = pd.DataFrame(records)
+filename = 'nifty50_stocks_top10.csv'
+df.to_csv(filename, index=False)
+
+# Add timestamp row
+ist = pytz.timezone('Asia/Kolkata')
+timestamp = datetime.now(ist).strftime("%d-%b %H:%M")
+with open(filename, 'a') as f:
+    f.write(f',,,,,Update Time:,{timestamp}\n')
+
+print("CSV created successfully!")
