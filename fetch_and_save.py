@@ -3,7 +3,7 @@ import pandas as pd
 import json
 from datetime import datetime
 import pytz
-
+import os
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'
 }
