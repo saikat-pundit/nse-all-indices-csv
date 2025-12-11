@@ -2,7 +2,7 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime
 import pytz
-
+import os
 # Tickers
 TICKERS = {
     "Dow Jones": "YM%3DF",
