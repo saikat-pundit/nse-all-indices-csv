@@ -4,9 +4,9 @@ from datetime import datetime
 
 # Tickers
 TICKERS = {
-    "Dow Jones": "^DJI",
-    "S&P 500": "^GSPC",
-    "NASDAQ 100": "^NDX",
+    "Dow Jones": "YM%3DF",
+    "S&P 500": "ES%3DF",
+    "NASDAQ 100": "NQ%3DF",
     "VIX": "^VIX",
     "Dollar Index": "DX-Y.NYB",
     "US 10-Year Yield": "^TNX",
@@ -16,6 +16,8 @@ TICKERS = {
     "Gold Comex": "GC%3DF",
     "Silver Comex": "SI=F",
     "Bitcoin": "BTC-USD",
+    "USD/INR": "INR=X",
+    "USD/JPY": "JPY=X",
 }
 
 def fetch_global_data():
