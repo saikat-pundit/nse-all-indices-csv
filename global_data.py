@@ -64,7 +64,7 @@ def fetch_global_data():
     if not records:
         print("\n‼️ ERROR: No data fetched!")
         return
-    os.makedirs('../Data', exist_ok=True)
+    os.makedirs('Data', exist_ok=True)
     df_out = pd.DataFrame(records)
     filename = "../Data/GLOBAL_DATA.csv"
     df_out.to_csv(filename, index=False)
