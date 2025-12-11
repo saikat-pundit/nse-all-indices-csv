@@ -25,10 +25,10 @@ jobs:
 
       - name: Run both scripts
         run: |
-          python fetch_and_save.py
-          python nifty50_top10.py
-          python etf_fetch.py
-          python global_data.py
+          python Scripts/fetch_and_save.py
+          python Scripts/nifty50_top10.py
+          python Scripts/etf_fetch.py
+          python Scripts/global_data.py
       - name: Commit and push if changed
         run: |
           git config user.name "GitHub Action"
