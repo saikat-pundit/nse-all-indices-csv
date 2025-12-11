@@ -1,4 +1,4 @@
-yfinance
+yfinance===0.2.66
 pandas
 pandas==2.3.3
 requests==2.32.5
