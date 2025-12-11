@@ -198,5 +198,5 @@ records.append({
 })
 
 df = pd.DataFrame(records)
-df.to_csv('nse_all_indices.csv', index=False)
+df.to_csv('../Data/nse_all_indices.csv', index=False)
 print("CSV created successfully!")
