@@ -116,7 +116,7 @@ if 'giftnifty' in data_market:
 for item in data_market['marketState']:
     if item.get('market') == 'currencyfuture':
         index_dict['USD/INR'] = {
-            'Index Name': 'USDINR',
+            'Index Name': 'USD/INR',
             'Last': item.get('last', '-'),
             'Change': '-',
             '% Change': '-',
