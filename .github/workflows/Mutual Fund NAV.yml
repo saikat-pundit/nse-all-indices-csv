@@ -20,7 +20,7 @@ jobs:
         run: pip install pandas requests
 
       - name: Run NAV script
-        run: python nav_fetch.py
+        run: python Scripts/nav_fetch.py
 
       - name: Commit and push if changed
         run: |
