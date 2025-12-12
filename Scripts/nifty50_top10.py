@@ -38,12 +38,12 @@ for item in data['data']:
         
         symbol_dict[symbol] = {
             'Symbol': symbol,
-            'Last': item.get('lastPrice'),
-            'Change': item.get('change'),
-            '% Change': percent_change_str,
-            'Previous Close': item.get('previousClose'),
-            'Year High': item.get('yearHigh'),
-            'Year Low': item.get('yearLow')
+            'LTP': item.get('lastPrice'),
+            'Chng': item.get('change'),
+            '% Chng': percent_change_str,
+            'Previous': item.get('previousClose'),
+            'Yr Hi': item.get('yearHigh'),
+            'Yr Lo': item.get('yearLow')
         }
 
 records = []
