@@ -90,8 +90,8 @@ for fund_name in target_funds:
 timestamp = datetime.now(ist).strftime('%d-%b-%Y %H:%M')
 sorted_records.append({
     'Fund Name': '',
-    'Fund NAV': '',
-    'Update Time': f'Last Updated: {timestamp} IST'
+    'Fund NAV': 'Last Updated:',
+    'Update Time': f'{timestamp} IST'
 })
 
 # Save to CSV
