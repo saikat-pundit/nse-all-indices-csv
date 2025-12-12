@@ -103,12 +103,12 @@ current_time = datetime.now(ist).strftime('%d-%b %H:%M')
 records.append({
     'SYMBOL': '',
     'ASSETS': '',
-    'LAST': '',
-    'CHANGE': '',
-    '%CHANGE': '',
-    'PREVIOUS CLOSE': '',
-    '52w High': 'Update Time',
-    '52w Low': current_time
+    'LTP': '',
+    'CHNG': '',
+    '%CHNG': '',
+    'PREVIOUS': '',
+    'Yr Hi': 'Update Time',
+    'Yr Lo': current_time
 })
 os.makedirs('../Data', exist_ok=True)
 # Create DataFrame and save to CSV
