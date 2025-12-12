@@ -68,7 +68,6 @@ for item in data.get('data', []):
         # Store in dictionary with symbol as key
         symbol_dict[symbol] = {
             'SYMBOL': symbol,
-            'ASSETS': assets,
             'LTP': ltP,
             'CHNG': chn,
             '%CHNG': percent_change_str,
