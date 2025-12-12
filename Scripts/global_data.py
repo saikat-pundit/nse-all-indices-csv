@@ -52,9 +52,9 @@ def fetch_global_data():
         records.append({
             "Index": name,
             "LTP": round(last, 2),
-            "Previous": round(prev, 2),
             "Chng": round(change, 2),
             "% Chng": f"{percent:+.2f}%",
+            "Previous": round(prev, 2),
             "Yr Hi": round(high, 2),
             "Yr Lo": round(low, 2),
         })
