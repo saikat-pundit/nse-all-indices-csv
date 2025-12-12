@@ -128,7 +128,7 @@ for item in data_indices['data']:
             'Year Low': item.get('yearLow')
         }
 
-# Process GIFT-NIFTY data from MoneyControl API
+# Process GIFT-NIFTY data from MoneyControl API - UPDATED SECTION
 if 'indices' in data_gift_nifty:
     gift_data = data_gift_nifty['indices']
     
@@ -139,6 +139,28 @@ if 'indices' in data_gift_nifty:
     prevclose = gift_data.get('prevclose', '-')
     yearlyhigh = gift_data.get('yearlyhigh', '-')
     yearlylow = gift_data.get('yearlylow', '-')
+    
+    # Clean comma from digits - ADDED THIS FUNCTION
+    def clean_number(value):
+        if value == '-' or value is None:
+            return '-'
+        if isinstance(value, (int, float)):
+            return value
+        if isinstance(value, str):
+            # Remove commas and convert to float if possible
+            cleaned = value.replace(',', '')
+            try:
+                return float(cleaned)
+            except ValueError:
+                return value
+        return value
+    
+    # Clean all numeric fields
+    lastprice = clean_number(lastprice)
+    change = clean_number(change)
+    prevclose = clean_number(prevclose)
+    yearlyhigh = clean_number(yearlyhigh)
+    yearlylow = clean_number(yearlylow)
     
     # Format percentage change
     if percentchange != '-':
