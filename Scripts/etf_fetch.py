@@ -86,7 +86,6 @@ for symbol in target_symbols:
         # Create empty entry for missing symbols
         records.append({
             'SYMBOL': symbol,
-            'ASSETS': '-',
             'LTP': '-',
             'CHNG': '-',
             '%CHNG': '-',
@@ -102,7 +101,6 @@ current_time = datetime.now(ist).strftime('%d-%b %H:%M')
 # Add Update Time row with time in the last column
 records.append({
     'SYMBOL': '',
-    'ASSETS': '',
     'LTP': '',
     'CHNG': '',
     '%CHNG': '',
