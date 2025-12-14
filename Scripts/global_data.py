@@ -27,19 +27,7 @@ commodity_symbols = [
     {"name": "FTSE 100", "symbol": "TVC:UKX"},
     {"name": "Bitcoin", "symbol": "CRYPTO:BTCUSD"},
     {"name": "USD/INR", "symbol": "FX_IDC:USDINR"},
-    {"name": "USD/JPY", "symbol": "OANDA:USDJPY"},
-    
-    # Commodities
-    {"name": "GOLD", "symbol": "TVC:GOLD"},
-    {"name": "GOLD!", "symbol": "COMEX:GC1!"},
-    {"name": "SILVER", "symbol": "TVC:SILVER"},
-    {"name": "SILVER!", "symbol": "COMEX:SI1!"},
-    {"name": "GOLD:SILVER", "symbol": "TVC:GOLDSILVER"},
-    {"name": "BRENT", "symbol": "FX:UKOIL"},
-    {"name": "GOLDINR", "symbol": "MCX:GOLD1!"},
-    {"name": "SILVERINR", "symbol": "MCX:SILVER1!"},
-    {"name": "GOLD ETF", "symbol": "NSE:GOLDBEES"},
-    {"name": "SILVER ETF", "symbol": "NSE:SILVERBEES"}
+    {"name": "USD/JPY", "symbol": "OANDA:USDJPY"}
 ]
 
 # Base API URL with placeholders
@@ -177,22 +165,6 @@ os.makedirs('Data', exist_ok=True)
 # Save to CSV with new filename
 csv_path = 'Data/GLOBAL_DATA.csv'
 df.to_csv(csv_path, index=False)
-
-# Print summary
-print(f"\n{'='*80}")
-print("GLOBAL MARKET DATA SUMMARY")
-print('='*80)
-print(f"CSV file saved: {csv_path}")
-print(f"Total records: {len(commodity_symbols)} symbols + 1 timestamp row")
-print(f"Successfully fetched: {len([d for d in commodity_data[:-1] if d['LTP'] != '0.00'])} out of {len(commodity_symbols)} symbols")
-print(f"Last update: {current_time} IST")
-
-# Display categories
-print(f"\nCategories fetched:")
-print(f"- Global Indices: 13")
-print(f"- Commodities: 10")
-print(f"- Total: 23 symbols")
-print('='*80)
 
 # Display the dataframe (optional)
 print("\nData Preview (first 10 rows):")
