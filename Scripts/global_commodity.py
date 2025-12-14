@@ -1,5 +1,3 @@
-# Scripts/global_commodity.py
-
 import requests
 import pandas as pd
 from datetime import datetime
