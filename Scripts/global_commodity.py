@@ -162,16 +162,6 @@ os.makedirs('Data', exist_ok=True)
 csv_path = 'Data/GLOBAL_COMMODITIES.csv'
 df.to_csv(csv_path, index=False)
 
-# Print summary
-print(f"\n{'='*60}")
-print("Global Commodity Data Summary")
-print('='*60)
-print(f"CSV file saved: {csv_path}")
-print(f"Total records: {len(commodity_symbols)} commodities + 1 timestamp row")
-print(f"Successfully fetched: {len([d for d in commodity_data[:-1] if d['LTP'] != '0.00'])} out of {len(commodity_symbols)} symbols")
-print(f"Last update: {current_time} IST")
-print('='*60)
-
 # Display the dataframe (optional)
 print("\nData Preview:")
 print(df.to_string(index=False))
