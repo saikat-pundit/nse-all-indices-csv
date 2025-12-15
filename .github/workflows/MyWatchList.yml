@@ -38,10 +38,11 @@ jobs:
           python Scripts/etf_fetch.py
           python Scripts/global_data.py
           python Scripts/global_commodity.py
+          python Scripts/eco.py
       - name: Commit and push if changed
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
-          git add Data/nse_all_indices.csv Data/nifty50_stocks_top10.csv Data/etf.csv Data/GLOBAL_DATA.csv Data/GLOBAL_COMMODITIES.csv 
+          git add Data/nse_all_indices.csv Data/nifty50_stocks_top10.csv Data/etf.csv Data/GLOBAL_DATA.csv Data/GLOBAL_COMMODITIES.csv Data/Economic.csv 
           git commit -m "Auto update $(date)" || exit 0
           git push
