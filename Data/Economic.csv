@@ -1,27 +1,27 @@
 Date,Time,Country,Title,Impact,Actual,Expected,Previous
-2025-12-01,16:00:00,India,Industrial Production YoY OCT,Medium,0.40%,3.60%,4.00%
-2025-12-03,19:45:00,USA,Industrial Production YoY SEP,Low,1.6%,,1.3%
-2025-12-05,10:00:00,India,RBI Interest Rate Decision,High,5.25%,5.25%,5.50%
-2025-12-11,00:30:00,USA,Fed Interest Rate Decision,High,3.75%,3.75%,4.00%
-2025-12-11,19:00:00,USA,Initial Jobless Claims DEC/06,Medium,236K,220K,192K
-2025-12-12,16:00:00,India,Inflation Rate YoY NOV,Medium,0.71%,0.70%,0.25%
-2025-12-15,07:30:00,China,Industrial Production YoY NOV,Medium,4.80%,5.00%,4.90%
-2025-12-15,12:00:00,India,WPI Inflation YoY NOV,Medium,-0.32%,-0.60%,-1.21%
-2025-12-16,19:00:00,USA,Housing Starts NOV,Medium,,,
-2025-12-16,19:00:00,USA,Non Farm Payrolls OCT,Medium,,,119K
-2025-12-16,19:00:00,USA,Non Farm Payrolls NOV,Medium,,35K,	119K
-2025-12-17,19:00:00,USA,Retail Sales YoY NOV,Medium,,,4.30%
-2025-12-18,18:45:00,Euro Area,ECB Interest Rate Decision,Medium,,2.15%,2.15%
-2025-12-18,19:00:00,USA,Inflation Rate YoY NOV,Medium,,3.20%,
-2025-12-18,19:00:00,USA,Initial Jobless Claims DEC/13,Medium,,230K,236K
-2025-12-19,08:30:00,Japan,BoJ Interest Rate Decision,Medium,,0.75%,0.50%
-2025-12-19,20:30:00,USA,Existing Home Sales NOV,Medium,,,4.1M
-2025-12-23,19:45:00,USA,Industrial Production YoY OCT,Low,,,1.60%
-2025-12-23,19:45:00,USA,Industrial Production YoY NOV,Low,,,
-2025-12-23,20:30:00,USA,New Home Sales NOV,Medium,,,
-2025-12-24,19:00:00,USA,Initial Jobless Claims DEC/20,Medium,,,
-2025-12-25,00:00:00,India,Market Holiday - Christmas,Low,,,
-2025-12-28,16:00:00,India,Industrial Production YoY NOV,Medium,,,0.40%
-2025-12-31,00:30:00,USA,FOMC Minutes,High,,,
-2025-12-31,07:00:00,China,NBS Manufacturing PMI DEC,Medium,,,49.2
-,,,,Updated:,,,15-Dec 19:30
+01 Dec 25,16:00,India,Industrial Production YoY OCT,Medium,0.40%,3.60%,4.00%
+03 Dec 25,19:45,USA,Industrial Production YoY SEP,Low,1.6%,,1.3%
+05 Dec 25,10:00,India,RBI Interest Rate Decision,High,5.25%,5.25%,5.50%
+11 Dec 25,00:30,USA,Fed Interest Rate Decision,High,3.75%,3.75%,4.00%
+11 Dec 25,19:00,USA,Initial Jobless Claims DEC/06,Medium,236K,220K,192K
+12 Dec 25,16:00,India,Inflation Rate YoY NOV,Medium,0.71%,0.70%,0.25%
+15 Dec 25,07:30,China,Industrial Production YoY NOV,Medium,4.80%,5.00%,4.90%
+15 Dec 25,12:00,India,WPI Inflation YoY NOV,Medium,-0.32%,-0.60%,-1.21%
+15 Dec 25,19:36,,,Updated,,,
+16 Dec 25,19:00,USA,Housing Starts NOV,Medium,,,
+16 Dec 25,19:00,USA,Non Farm Payrolls OCT,Medium,,,119K
+16 Dec 25,19:00,USA,Non Farm Payrolls NOV,Medium,,35K,	119K
+17 Dec 25,19:00,USA,Retail Sales YoY NOV,Medium,,,4.30%
+18 Dec 25,18:45,Euro Area,ECB Interest Rate Decision,Medium,,2.15%,2.15%
+18 Dec 25,19:00,USA,Inflation Rate YoY NOV,Medium,,3.20%,
+18 Dec 25,19:00,USA,Initial Jobless Claims DEC/13,Medium,,230K,236K
+19 Dec 25,08:30,Japan,BoJ Interest Rate Decision,Medium,,0.75%,0.50%
+19 Dec 25,20:30,USA,Existing Home Sales NOV,Medium,,,4.1M
+23 Dec 25,19:45,USA,Industrial Production YoY OCT,Low,,,1.60%
+23 Dec 25,19:45,USA,Industrial Production YoY NOV,Low,,,
+23 Dec 25,20:30,USA,New Home Sales NOV,Medium,,,
+24 Dec 25,19:00,USA,Initial Jobless Claims DEC/20,Medium,,,
+25 Dec 25,00:00,India,Market Holiday - Christmas,Low,,,
+28 Dec 25,16:00,India,Industrial Production YoY NOV,Medium,,,0.40%
+31 Dec 25,00:30,USA,FOMC Minutes,High,,,
+31 Dec 25,07:00,China,NBS Manufacturing PMI DEC,Medium,,,49.2
