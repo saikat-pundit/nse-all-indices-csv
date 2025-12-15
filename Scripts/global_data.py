@@ -4,17 +4,11 @@ from datetime import datetime
 import pytz
 import os
 
-# Headers to mimic a browser request
 headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept': 'application/json',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Referer': 'https://www.tradingview.com/'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
 }
 
-# Commodity definitions with TradingView symbols
 commodity_symbols = [
-    # Global Indices
     {"name": "Dow Jones", "symbol": "CBOT_MINI:YM1!"},
     {"name": "S&P 500", "symbol": "CME_MINI:ES1!"},
     {"name": "NASDAQ 100", "symbol": "CME_MINI:NQ1!"},
@@ -30,82 +24,38 @@ commodity_symbols = [
     {"name": "USD/JPY", "symbol": "OANDA:USDJPY"}
 ]
 
-# Base API URL with placeholders
 BASE_API_URL = "https://scanner.tradingview.com/symbol?symbol={symbol}&fields=close[1],change_abs,price_52_week_high,price_52_week_low,close,change&no_404=true&label-product=symbols-performance"
-
-# Dictionary to store extracted records
 commodity_data = []
 
-print("Fetching global market data...")
-print(f"Total symbols to fetch: {len(commodity_symbols)}")
-print("-" * 60)
+def format_value(value, default="0.00", is_percent=False):
+    try:
+        if value is None:
+            return default
+        if is_percent:
+            return f"{float(value):.2f}%"
+        return f"{float(value):.2f}"
+    except:
+        return default
 
-# Process each symbol
 for commodity in commodity_symbols:
-    symbol_name = commodity["name"]
-    tv_symbol = commodity["symbol"]
-    
-    # Build the API URL
-    url = BASE_API_URL.format(symbol=tv_symbol)
+    url = BASE_API_URL.format(symbol=commodity["symbol"])
     
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()  # Raise an error for bad status codes
-        
+        response = requests.get(url, headers=headers, timeout=5)
         if response.status_code == 200:
             data = response.json()
-            
-            # Extract data fields
-            close = data.get('close', 0)
-            change = data.get('change', 0)
-            change_abs = data.get('change_abs', 0)
-            previous_close = data.get('close[1]', 0)
-            yr_hi = data.get('price_52_week_high', 0)
-            yr_lo = data.get('price_52_week_low', 0)
-            
-            # Format percentage change
-            if change is not None:
-                try:
-                    percent_change = f"{change:.2f}%"
-                except (ValueError, TypeError):
-                    percent_change = "0.00%"
-            else:
-                percent_change = "0.00%"
-            
-            # Format absolute change
-            if change_abs is not None:
-                try:
-                    abs_change = f"{change_abs:.2f}"
-                except (ValueError, TypeError):
-                    abs_change = "0.00"
-            else:
-                abs_change = "0.00"
-            
-            # Format other numeric values
-            close_formatted = f"{close:.2f}" if close is not None else "0.00"
-            previous_formatted = f"{previous_close:.2f}" if previous_close is not None else "0.00"
-            yr_hi_formatted = f"{yr_hi:.2f}" if yr_hi is not None else "0.00"
-            yr_lo_formatted = f"{yr_lo:.2f}" if yr_lo is not None else "0.00"
-            
-            # Add to records
             commodity_data.append({
-                'Index': symbol_name,
-                'LTP': close_formatted,
-                'Chng': abs_change,
-                '% Chng': percent_change,
-                'Previous': previous_formatted,
-                'Yr Hi': yr_hi_formatted,
-                'Yr Lo': yr_lo_formatted
+                'Index': commodity["name"],
+                'LTP': format_value(data.get('close')),
+                'Chng': format_value(data.get('change_abs')),
+                '% Chng': format_value(data.get('change'), is_percent=True),
+                'Previous': format_value(data.get('close[1]')),
+                'Yr Hi': format_value(data.get('price_52_week_high')),
+                'Yr Lo': format_value(data.get('price_52_week_low'))
             })
-            
-            print(f"✓ {symbol_name:20} | LTP: {close_formatted:>10} | Change: {percent_change:>8}")
-            
         else:
-            print(f"✗ Failed to fetch {symbol_name}: HTTP {response.status_code}")
-            
-            # Add placeholder data for failed fetch
             commodity_data.append({
-                'Index': symbol_name,
+                'Index': commodity["name"],
                 'LTP': "0.00",
                 'Chng': "0.00",
                 '% Chng': "0.00%",
@@ -113,26 +63,9 @@ for commodity in commodity_symbols:
                 'Yr Hi': "0.00",
                 'Yr Lo': "0.00"
             })
-            
-    except requests.exceptions.RequestException as e:
-        print(f"✗ Error fetching {symbol_name}: {e}")
-        
-        # Add placeholder data for error
+    except:
         commodity_data.append({
-            'Index': symbol_name,
-            'LTP': "0.00",
-            'Chng': "0.00",
-            '% Chng': "0.00%",
-            'Previous': "0.00",
-            'Yr Hi': "0.00",
-            'Yr Lo': "0.00"
-        })
-    except Exception as e:
-        print(f"✗ Unexpected error for {symbol_name}: {e}")
-        
-        # Add placeholder data for unexpected error
-        commodity_data.append({
-            'Index': symbol_name,
+            'Index': commodity["name"],
             'LTP': "0.00",
             'Chng': "0.00",
             '% Chng': "0.00%",
@@ -141,11 +74,9 @@ for commodity in commodity_symbols:
             'Yr Lo': "0.00"
         })
 
-# Add timestamp row at the end
+# Add timestamp
 ist = pytz.timezone('Asia/Kolkata')
 current_time = datetime.now(ist).strftime('%d-%b %H:%M')
-
-# Add Update Time row with time in the last column
 commodity_data.append({
     'Index': '',
     'LTP': '',
@@ -156,12 +87,6 @@ commodity_data.append({
     'Yr Lo': current_time
 })
 
-# Create DataFrame
-df = pd.DataFrame(commodity_data)
-
-# Ensure Data directory exists
+# Save to CSV
 os.makedirs('Data', exist_ok=True)
-
-# Save to CSV with new filename
-csv_path = 'Data/GLOBAL_DATA.csv'
-df.to_csv(csv_path, index=False)
+pd.DataFrame(commodity_data).to_csv('Data/GLOBAL_DATA.csv', index=False)
