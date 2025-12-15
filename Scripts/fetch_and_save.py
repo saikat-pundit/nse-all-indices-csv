@@ -20,7 +20,7 @@ response_market = requests.get(url_market, headers=headers)
 data_market = response_market.json()
 
 # THIRD API: Fetch commodity data from Money Control
-url_commodities = "https://priceapi.moneycontrol.com/technicalCompanyData/commodity/getMajorCommodities?tabName=SPOT&deviceType=W"
+url_commodities = "https://priceapi.moneycontrol.com/technicalCompanyData/commodity/getMajorCommodities?tabName=MCX&deviceType=W"
 response_commodities = requests.get(url_commodities, headers=headers)
 data_commodities = response_commodities.json()
 
