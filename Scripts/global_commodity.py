@@ -152,6 +152,7 @@ commodity_data.append({
     'Yr Lo': current_time
 })
 
+df = pd.DataFrame(commodity_data)
 # Ensure Data directory exists
 os.makedirs('Data', exist_ok=True)
 
