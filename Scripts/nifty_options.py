@@ -39,7 +39,7 @@ def get_filtered_strike_prices(data, strike_range=20):
     start_index = max(0, target_index - strike_range)
     end_index = min(len(all_strikes), target_index + strike_range + 1)
     
-    return all_strikes[start_index:end_index], underlying_value, rounded_strike
+    return all_strikes[start_index:end_index], underlying_value, rounded_strike, target_index - start_index
 
 def get_option_chain(symbol="NIFTY", expiry=None):
     if expiry is None:
@@ -57,12 +57,14 @@ def get_option_chain(symbol="NIFTY", expiry=None):
     return data, expiry
 
 def create_option_chain_dataframe(data, expiry_date):
-    filtered_strikes, underlying_value, rounded_strike = get_filtered_strike_prices(data)
+    filtered_strikes, underlying_value, rounded_strike, underlying_index = get_filtered_strike_prices(data)
     
     strike_map = {item['strikePrice']: item for item in data['records']['data']}
     
     option_data = []
-    for strike in filtered_strikes:
+    
+    # Add strike prices before underlying row
+    for i, strike in enumerate(filtered_strikes):
         if strike not in strike_map:
             continue
             
@@ -70,31 +72,29 @@ def create_option_chain_dataframe(data, expiry_date):
         ce_data = item.get('CE', {})
         pe_data = item.get('PE', {})
         
-        # Check if this is the strike closest to rounded strike
-        is_underlying_row = (abs(strike - rounded_strike) < 25)  # Within 25 points
+        option_data.append({
+            'CALL OI': ce_data.get('openInterest', 0),
+            'CALL OI CHNG': ce_data.get('changeinOpenInterest', 0),
+            'CALL VOLUME': ce_data.get('totalTradedVolume', 0),
+            'CALL IV': ce_data.get('impliedVolatility', 0),
+            'CALL CHNG': ce_data.get('change', 0),
+            'CALL LTP': ce_data.get('lastPrice', 0),
+            'STRIKE': strike,
+            'PUT LTP': pe_data.get('lastPrice', 0),
+            'PUT CHNG': pe_data.get('change', 0),
+            'PUT IV': pe_data.get('impliedVolatility', 0),
+            'PUT VOLUME': pe_data.get('totalTradedVolume', 0),
+            'PUT OI CHNG': pe_data.get('changeinOpenInterest', 0),
+            'PUT OI': pe_data.get('openInterest', 0)
+        })
         
-        if is_underlying_row:
+        # Insert underlying value row after the rounded strike row
+        if i == underlying_index:
             option_data.append({
                 'CALL OI': '', 'CALL OI CHNG': '', 'CALL VOLUME': '', 'CALL IV': '',
                 'CALL CHNG': '', 'CALL LTP': '', 'STRIKE': f"{underlying_value}",
                 'PUT LTP': 'Expiry: ' + expiry_date, 'PUT CHNG': '', 'PUT IV': '',
                 'PUT VOLUME': '', 'PUT OI CHNG': '', 'PUT OI': ''
-            })
-        else:
-            option_data.append({
-                'CALL OI': ce_data.get('openInterest', 0),
-                'CALL OI CHNG': ce_data.get('changeinOpenInterest', 0),
-                'CALL VOLUME': ce_data.get('totalTradedVolume', 0),
-                'CALL IV': ce_data.get('impliedVolatility', 0),
-                'CALL CHNG': ce_data.get('change', 0),
-                'CALL LTP': ce_data.get('lastPrice', 0),
-                'STRIKE': strike,
-                'PUT LTP': pe_data.get('lastPrice', 0),
-                'PUT CHNG': pe_data.get('change', 0),
-                'PUT IV': pe_data.get('impliedVolatility', 0),
-                'PUT VOLUME': pe_data.get('totalTradedVolume', 0),
-                'PUT OI CHNG': pe_data.get('changeinOpenInterest', 0),
-                'PUT OI': pe_data.get('openInterest', 0)
             })
     
     df = pd.DataFrame(option_data)
