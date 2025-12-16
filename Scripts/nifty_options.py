@@ -54,11 +54,9 @@ def create_option_chain_dataframe(data):
     df = pd.DataFrame(option_data)
     
     column_order = [
-        'PUT_OI', 'PUT_CHNG_IN_OI', 'PUT_VOLUME', 'PUT_IV', 'PUT_LTP', 
-        'PUT_CHNG',
+        'PUT_OI', 'PUT_CHNG_IN_OI', 'PUT_VOLUME', 'PUT_IV', 'PUT_CHNG','PUT_LTP',  
         'STRIKE',
-        'CALL_LTP', 'CALL_CHNG', 'CALL_IV', 'CALL_VOLUME',
-        'CALL_CHNG_IN_OI', 'CALL_OI'
+        'CALL_LTP', 'CALL_CHNG', 'CALL_IV', 'CALL_VOLUME', 'CALL_CHNG_IN_OI', 'CALL_OI'
     ]
     
     df = df[column_order]
