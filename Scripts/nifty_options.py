@@ -39,7 +39,7 @@ def get_filtered_strike_prices(data, strike_range=10):
     start_index = max(0, target_index - strike_range)
     end_index = min(len(all_strikes), target_index + strike_range + 1)
     
-    return all_strikes[start_index:end_index], underlying_value, rounded_strike
+    return all_strikes[start_index:end_index], underlying_value, rounded_strike, target_index - start_index
 
 def get_option_chain(symbol="NIFTY", expiry=None):
     if expiry is None:
@@ -57,13 +57,13 @@ def get_option_chain(symbol="NIFTY", expiry=None):
     return data, expiry
 
 def create_option_chain_dataframe(data, expiry_date):
-    filtered_strikes, underlying_value, rounded_strike = get_filtered_strike_prices(data)
+    filtered_strikes, underlying_value, rounded_strike, underlying_index = get_filtered_strike_prices(data)
     
     strike_map = {item['strikePrice']: item for item in data['records']['data'] if item['strikePrice'] % 100 == 0}
     
     option_data = []
     
-    for strike in filtered_strikes:
+    for i, strike in enumerate(filtered_strikes):
         if strike not in strike_map:
             continue
             
@@ -87,7 +87,7 @@ def create_option_chain_dataframe(data, expiry_date):
             'PUT OI': pe_data.get('openInterest', 0)
         })
         
-        if strike == rounded_strike:
+        if i == underlying_index:
             option_data.append({
                 'CALL OI': '', 'CALL OI CHNG': '', 'CALL VOLUME': '', 'CALL IV': '',
                 'CALL CHNG': '', 'CALL LTP': '', 'STRIKE': f"{underlying_value}",
