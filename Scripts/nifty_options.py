@@ -36,67 +36,46 @@ def create_option_chain_dataframe(data):
         
         option_row = {
             'STRIKE': strike_price,
-            'PUT_OI': pe_data.get('openInterest', 0),
-            'PUT_CHNG_IN_OI': pe_data.get('changeinOpenInterest', 0),
-            'PUT_VOLUME': pe_data.get('totalTradedVolume', 0),
-            'PUT_IV': pe_data.get('impliedVolatility', 0),
-            'PUT_LTP': pe_data.get('lastPrice', 0),
-            'PUT_CHNG': pe_data.get('change', 0),
-            'PUT_BID': pe_data.get('buyPrice1', 0),
-            'PUT_BID_QTY': pe_data.get('buyQuantity1', 0),
-            'PUT_ASK': pe_data.get('sellPrice1', 0),
-            'PUT_ASK_QTY': pe_data.get('sellQuantity1', 0),
-            'CALL_BID': ce_data.get('buyPrice1', 0),
-            'CALL_BID_QTY': ce_data.get('buyQuantity1', 0),
-            'CALL_ASK': ce_data.get('sellPrice1', 0),
-            'CALL_ASK_QTY': ce_data.get('sellQuantity1', 0),
-            'CALL_LTP': ce_data.get('lastPrice', 0),
-            'CALL_CHNG': ce_data.get('change', 0),
-            'CALL_IV': ce_data.get('impliedVolatility', 0),
-            'CALL_VOLUME': ce_data.get('totalTradedVolume', 0),
-            'CALL_CHNG_IN_OI': ce_data.get('changeinOpenInterest', 0),
-            'CALL_OI': ce_data.get('openInterest', 0)
+            'OI': pe_data.get('openInterest', 0),
+            'OI_CHANGE': pe_data.get('changeinOpenInterest', 0),
+            'VOLUME': pe_data.get('totalTradedVolume', 0),
+            'CHANGE': pe_data.get('change', 0),
+            'LTP': pe_data.get('lastPrice', 0),
+            'C_LTP': ce_data.get('lastPrice', 0),
+            'C_CHANGE': ce_data.get('change', 0),
+            'C_VOLUME': ce_data.get('totalTradedVolume', 0),
+            'C_OI_CHANGE': ce_data.get('changeinOpenInterest', 0),
+            'C_OI': ce_data.get('openInterest', 0)
         }
         option_data.append(option_row)
     
     df = pd.DataFrame(option_data)
     
     column_order = [
-        'PUT_OI', 'PUT_CHNG_IN_OI', 'PUT_VOLUME', 'PUT_IV', 'PUT_LTP', 
-        'PUT_CHNG', 'PUT_BID', 'PUT_BID_QTY', 'PUT_ASK', 'PUT_ASK_QTY',
+        'OI', 'OI_CHANGE', 'VOLUME', 'CHANGE', 'LTP',
         'STRIKE',
-        'CALL_BID', 'CALL_BID_QTY', 'CALL_ASK', 'CALL_ASK_QTY',
-        'CALL_LTP', 'CALL_CHNG', 'CALL_IV', 'CALL_VOLUME',
-        'CALL_CHNG_IN_OI', 'CALL_OI'
+        'C_LTP', 'C_CHANGE', 'C_VOLUME', 'C_OI_CHANGE', 'C_OI'
     ]
     
     df = df[column_order]
     
-    metadata = pd.DataFrame([{
-        'PUT_OI': 'UNDERLYING',
-        'PUT_CHNG_IN_OI': underlying_value,
-        'PUT_VOLUME': 'TIMESTAMP',
-        'PUT_IV': timestamp,
-        'PUT_LTP': '',
-        'PUT_CHNG': '',
-        'PUT_BID': '',
-        'PUT_BID_QTY': '',
-        'PUT_ASK': '',
-        'PUT_ASK_QTY': '',
-        'STRIKE': '',
-        'CALL_BID': '',
-        'CALL_BID_QTY': '',
-        'CALL_ASK': '',
-        'CALL_ASK_QTY': '',
-        'CALL_LTP': '',
-        'CALL_CHNG': '',
-        'CALL_IV': '',
-        'CALL_VOLUME': '',
-        'CALL_CHNG_IN_OI': '',
-        'CALL_OI': ''
-    }])
+    df = df.sort_values('STRIKE')
     
-    df = pd.concat([metadata, df], ignore_index=True)
+    timestamp_row = {
+        'OI': f'TIMESTAMP: {timestamp}',
+        'OI_CHANGE': f'UNDERLYING: {underlying_value}',
+        'VOLUME': '',
+        'CHANGE': '',
+        'LTP': '',
+        'STRIKE': '',
+        'C_LTP': '',
+        'C_CHANGE': '',
+        'C_VOLUME': '',
+        'C_OI_CHANGE': '',
+        'C_OI': ''
+    }
+    
+    df = pd.concat([pd.DataFrame([timestamp_row]), df], ignore_index=True)
     
     return df
 
