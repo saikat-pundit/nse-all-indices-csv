@@ -41,7 +41,15 @@ def create_option_chain_dataframe(data):
             'PUT_VOLUME': pe_data.get('totalTradedVolume', 0),
             'PUT_IV': pe_data.get('impliedVolatility', 0),
             'PUT_LTP': pe_data.get('lastPrice', 0),
-            'PUT_CHNG': pe_data.get('change', 0),            
+            'PUT_CHNG': pe_data.get('change', 0),
+            'PUT_BID': pe_data.get('buyPrice1', 0),
+            'PUT_BID_QTY': pe_data.get('buyQuantity1', 0),
+            'PUT_ASK': pe_data.get('sellPrice1', 0),
+            'PUT_ASK_QTY': pe_data.get('sellQuantity1', 0),
+            'CALL_BID': ce_data.get('buyPrice1', 0),
+            'CALL_BID_QTY': ce_data.get('buyQuantity1', 0),
+            'CALL_ASK': ce_data.get('sellPrice1', 0),
+            'CALL_ASK_QTY': ce_data.get('sellQuantity1', 0),
             'CALL_LTP': ce_data.get('lastPrice', 0),
             'CALL_CHNG': ce_data.get('change', 0),
             'CALL_IV': ce_data.get('impliedVolatility', 0),
@@ -55,8 +63,9 @@ def create_option_chain_dataframe(data):
     
     column_order = [
         'PUT_OI', 'PUT_CHNG_IN_OI', 'PUT_VOLUME', 'PUT_IV', 'PUT_LTP', 
-        'PUT_CHNG',
+        'PUT_CHNG', 'PUT_BID', 'PUT_BID_QTY', 'PUT_ASK', 'PUT_ASK_QTY',
         'STRIKE',
+        'CALL_BID', 'CALL_BID_QTY', 'CALL_ASK', 'CALL_ASK_QTY',
         'CALL_LTP', 'CALL_CHNG', 'CALL_IV', 'CALL_VOLUME',
         'CALL_CHNG_IN_OI', 'CALL_OI'
     ]
