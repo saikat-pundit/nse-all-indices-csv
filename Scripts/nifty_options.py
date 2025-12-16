@@ -63,9 +63,8 @@ def create_option_chain_dataframe(data):
     
     column_order = [
         'PUT_OI', 'PUT_CHNG_IN_OI', 'PUT_VOLUME', 'PUT_IV', 'PUT_LTP', 
-        'PUT_CHNG', 'PUT_BID', 'PUT_BID_QTY', 'PUT_ASK', 'PUT_ASK_QTY',
+        'PUT_CHNG',
         'STRIKE',
-        'CALL_BID', 'CALL_BID_QTY', 'CALL_ASK', 'CALL_ASK_QTY',
         'CALL_LTP', 'CALL_CHNG', 'CALL_IV', 'CALL_VOLUME',
         'CALL_CHNG_IN_OI', 'CALL_OI'
     ]
