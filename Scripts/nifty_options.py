@@ -70,31 +70,36 @@ def create_option_chain_dataframe(data, expiry_date):
         ce_data = item.get('CE', {})
         pe_data = item.get('PE', {})
         
-        option_data.append({
-            'CALL OI': ce_data.get('openInterest', 0),
-            'CALL OI CHNG': ce_data.get('changeinOpenInterest', 0),
-            'CALL VOLUME': ce_data.get('totalTradedVolume', 0),
-            'CALL IV': ce_data.get('impliedVolatility', 0),
-            'CALL CHNG': ce_data.get('change', 0),
-            'CALL LTP': ce_data.get('lastPrice', 0),
-            'STRIKE': strike,
-            'PUT LTP': pe_data.get('lastPrice', 0),
-            'PUT CHNG': pe_data.get('change', 0),
-            'PUT IV': pe_data.get('impliedVolatility', 0),
-            'PUT VOLUME': pe_data.get('totalTradedVolume', 0),
-            'PUT OI CHNG': pe_data.get('changeinOpenInterest', 0),
-            'PUT OI': pe_data.get('openInterest', 0)
-        })
+        # Check if this is the strike closest to rounded strike
+        is_underlying_row = (abs(strike - rounded_strike) < 25)  # Within 25 points
+        
+        if is_underlying_row:
+            option_data.append({
+                'CALL OI': '', 'CALL OI CHNG': '', 'CALL VOLUME': '', 'CALL IV': '',
+                'CALL CHNG': '', 'CALL LTP': '', 'STRIKE': f"{underlying_value}",
+                'PUT LTP': 'Expiry: ' + expiry_date, 'PUT CHNG': '', 'PUT IV': '',
+                'PUT VOLUME': '', 'PUT OI CHNG': '', 'PUT OI': ''
+            })
+        else:
+            option_data.append({
+                'CALL OI': ce_data.get('openInterest', 0),
+                'CALL OI CHNG': ce_data.get('changeinOpenInterest', 0),
+                'CALL VOLUME': ce_data.get('totalTradedVolume', 0),
+                'CALL IV': ce_data.get('impliedVolatility', 0),
+                'CALL CHNG': ce_data.get('change', 0),
+                'CALL LTP': ce_data.get('lastPrice', 0),
+                'STRIKE': strike,
+                'PUT LTP': pe_data.get('lastPrice', 0),
+                'PUT CHNG': pe_data.get('change', 0),
+                'PUT IV': pe_data.get('impliedVolatility', 0),
+                'PUT VOLUME': pe_data.get('totalTradedVolume', 0),
+                'PUT OI CHNG': pe_data.get('changeinOpenInterest', 0),
+                'PUT OI': pe_data.get('openInterest', 0)
+            })
     
     df = pd.DataFrame(option_data)
     
-    metadata = pd.DataFrame([{
-        'CALL OI': '', 'CALL OI CHNG': '', 'CALL VOLUME': '', 'CALL IV': '',
-        'CALL CHNG': '', 'CALL LTP': '', 'STRIKE': f"{underlying_value}",
-        'PUT LTP': 'Expiry: ' + expiry_date, 'PUT CHNG': '', 'PUT IV': '',
-        'PUT VOLUME': '', 'PUT OI CHNG': '', 'PUT OI': ''
-    }])
-    
+    # Add timestamp as last row
     ist = pytz.timezone('Asia/Kolkata')
     current_time = datetime.now(ist).strftime('%d-%b %H:%M')
     
@@ -105,7 +110,7 @@ def create_option_chain_dataframe(data, expiry_date):
         'PUT OI CHNG': 'Update Time', 'PUT OI': current_time
     }])
     
-    df = pd.concat([metadata, df, timestamp_row], ignore_index=True)
+    df = pd.concat([df, timestamp_row], ignore_index=True)
     return df
 
 def main():
@@ -125,7 +130,7 @@ def main():
         print(f"Underlying Value: {data['records']['underlyingValue']}")
         print(f"Rounded to nearest 50: {round_to_nearest_50(data['records']['underlyingValue'])}")
         print(f"Expiry Date: {expiry}")
-        print(f"Showing {len(df)-2} strike prices")
+        print(f"Showing {len(df)-1} rows (including timestamp row)")
     else:
         print("Failed to fetch option chain data")
 
