@@ -1,7 +1,8 @@
 import requests
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
+import os
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
@@ -10,7 +11,27 @@ headers = {
     'Referer': 'https://www.nseindia.com/option-chain'
 }
 
-def get_option_chain(symbol="NIFTY", expiry="23-Dec-2025"):
+def get_next_tuesday():
+    """Get the next Tuesday date in DD-MMM-YYYY format"""
+    ist = pytz.timezone('Asia/Kolkata')
+    today = datetime.now(ist).date()
+    
+    # Calculate days until next Tuesday
+    # Monday is 0, Tuesday is 1, etc.
+    days_ahead = 1 - today.weekday()  # 1 is Tuesday
+    if days_ahead <= 0:  # If today is Tuesday or past Tuesday
+        days_ahead += 7  # Get next week's Tuesday
+    
+    next_tuesday = today + timedelta(days=days_ahead)
+    
+    # Format date as required by NSE (e.g., "23-Dec-2025")
+    formatted_date = next_tuesday.strftime('%d-%b-%Y').upper()
+    return formatted_date
+
+def get_option_chain(symbol="NIFTY", expiry=None):
+    if expiry is None:
+        expiry = get_next_tuesday()
+    
     url = f"https://www.nseindia.com/api/option-chain-v3?type=Indices&symbol={symbol}&expiry={expiry}"
     
     session = requests.Session()
@@ -20,9 +41,9 @@ def get_option_chain(symbol="NIFTY", expiry="23-Dec-2025"):
     response = session.get(url)
     data = response.json()
     
-    return data
+    return data, expiry
 
-def create_option_chain_dataframe(data):
+def create_option_chain_dataframe(data, expiry_date):
     records = data['records']
     timestamp = records['timestamp']
     underlying_value = records['underlyingValue']
@@ -42,14 +63,6 @@ def create_option_chain_dataframe(data):
             'PUT_IV': pe_data.get('impliedVolatility', 0),
             'PUT_LTP': pe_data.get('lastPrice', 0),
             'PUT_CHNG': pe_data.get('change', 0),
-            'PUT_BID': pe_data.get('buyPrice1', 0),
-            'PUT_BID_QTY': pe_data.get('buyQuantity1', 0),
-            'PUT_ASK': pe_data.get('sellPrice1', 0),
-            'PUT_ASK_QTY': pe_data.get('sellQuantity1', 0),
-            'CALL_BID': ce_data.get('buyPrice1', 0),
-            'CALL_BID_QTY': ce_data.get('buyQuantity1', 0),
-            'CALL_ASK': ce_data.get('sellPrice1', 0),
-            'CALL_ASK_QTY': ce_data.get('sellQuantity1', 0),
             'CALL_LTP': ce_data.get('lastPrice', 0),
             'CALL_CHNG': ce_data.get('change', 0),
             'CALL_IV': ce_data.get('impliedVolatility', 0),
@@ -61,33 +74,24 @@ def create_option_chain_dataframe(data):
     
     df = pd.DataFrame(option_data)
     
+    # Updated column order without removed columns
     column_order = [
-        'PUT_OI', 'PUT_CHNG_IN_OI', 'PUT_VOLUME', 'PUT_IV', 'PUT_LTP', 
-        'PUT_CHNG', 'PUT_BID', 'PUT_BID_QTY', 'PUT_ASK', 'PUT_ASK_QTY',
+        'PUT_OI', 'PUT_CHNG_IN_OI', 'PUT_VOLUME', 'PUT_IV', 'PUT_CHNG', 'PUT_LTP',
         'STRIKE',
-        'CALL_BID', 'CALL_BID_QTY', 'CALL_ASK', 'CALL_ASK_QTY',
-        'CALL_LTP', 'CALL_CHNG', 'CALL_IV', 'CALL_VOLUME',
-        'CALL_CHNG_IN_OI', 'CALL_OI'
+        'CALL_LTP', 'CALL_CHNG', 'CALL_IV', 'CALL_VOLUME', 'CALL_CHNG_IN_OI', 'CALL_OI'
     ]
     
     df = df[column_order]
     
+    # Add underlying value row
     metadata = pd.DataFrame([{
         'PUT_OI': '',
-        'PUT_CHNG_IN_OI': ''
+        'PUT_CHNG_IN_OI': '',
         'PUT_VOLUME': '',
         'PUT_IV': '',
         'PUT_LTP': '',
         'PUT_CHNG': '',
-        'PUT_BID': '',
-        'PUT_BID_QTY': '',
-        'PUT_ASK': '',
-        'PUT_ASK_QTY': '',
         'STRIKE': underlying_value,
-        'CALL_BID': '',
-        'CALL_BID_QTY': '',
-        'CALL_ASK': '',
-        'CALL_ASK_QTY': '',
         'CALL_LTP': '',
         'CALL_CHNG': '',
         'CALL_IV': '',
@@ -98,25 +102,57 @@ def create_option_chain_dataframe(data):
     
     df = pd.concat([metadata, df], ignore_index=True)
     
+    # Get current IST timestamp for footer
+    ist = pytz.timezone('Asia/Kolkata')
+    current_time = datetime.now(ist).strftime('%d-%b-%Y %H:%M:%S')
+    
+    # Add timestamp as last row
+    timestamp_row = pd.DataFrame([{
+        'PUT_OI': '',
+        'PUT_CHNG_IN_OI': '',
+        'PUT_VOLUME': '',
+        'PUT_IV': '',
+        'PUT_LTP': '',
+        'PUT_CHNG': '',
+        'STRIKE': 'Expiry: ' + expiry_date,
+        'CALL_LTP': '',
+        'CALL_CHNG': '',
+        'CALL_IV': '',
+        'CALL_VOLUME': '',
+        'CALL_CHNG_IN_OI': 'Update Time',
+        'CALL_OI': current_time
+    }])
+    
+    df = pd.concat([df, timestamp_row], ignore_index=True)
+    
     return df
 
 def main():
     ist = pytz.timezone('Asia/Kolkata')
     
-    data = get_option_chain()
+    # Get expiry date and data
+    expiry_date = get_next_tuesday()
+    print(f"Using expiry date: {expiry_date}")
+    
+    data, expiry = get_option_chain(expiry=expiry_date)
     
     if data:
-        df = create_option_chain_dataframe(data)
+        df = create_option_chain_dataframe(data, expiry)
         
-        import os
+        # Ensure directory exists
         os.makedirs('Data', exist_ok=True)
         
-        df.to_csv('Data/Option.csv', index=False)
+        # Save to CSV
+        output_path = 'Data/Option.csv'
+        df.to_csv(output_path, index=False)
         
-        timestamp = datetime.now(ist).strftime('%d-%b %H:%M')
-        print(f"Option chain saved to Data/Option.csv")
-        print(f"Timestamp: {timestamp} IST")
+        # Print summary
+        current_time = datetime.now(ist).strftime('%d-%b %H:%M')
+        print(f"Option chain saved to {output_path}")
+        print(f"Timestamp: {current_time} IST")
         print(f"Underlying Value: {data['records']['underlyingValue']}")
+        print(f"Expiry Date: {expiry}")
+        print(f"Data saved with {len(df)-2} strike prices (excluding header and footer rows)")
     else:
         print("Failed to fetch option chain data")
 
