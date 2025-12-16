@@ -18,6 +18,7 @@ commodity_symbols = [
     {"name": "SILVER!", "symbol": "COMEX:SI1!"},
     {"name": "GOLD:SILVER", "symbol": "TVC:GOLDSILVER"},
     {"name": "DXY", "symbol": "TVC:DXY"},
+    {"name": "USD/INR", "symbol": "FX_IDC:USDINR"},
     {"name": "US10Y", "symbol": "TVC:US10Y"},
     {"name": "BRENT", "symbol": "FX:UKOIL"},
     {"name": "GOLDINR", "symbol": "MCX:GOLD1!"},
