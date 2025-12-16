@@ -72,7 +72,7 @@ def create_option_chain_dataframe(data, expiry_date):
         
         option_data.append({
             'CALL OI': ce_data.get('openInterest', 0),
-            'CALL CHNG IN OI': ce_data.get('changeinOpenInterest', 0),
+            'CALL OI CHNG': ce_data.get('changeinOpenInterest', 0),
             'CALL VOLUME': ce_data.get('totalTradedVolume', 0),
             'CALL IV': ce_data.get('impliedVolatility', 0),
             'CALL CHNG': ce_data.get('change', 0),
@@ -82,27 +82,27 @@ def create_option_chain_dataframe(data, expiry_date):
             'PUT CHNG': pe_data.get('change', 0),
             'PUT IV': pe_data.get('impliedVolatility', 0),
             'PUT VOLUME': pe_data.get('totalTradedVolume', 0),
-            'PUT CHNG IN OI': pe_data.get('changeinOpenInterest', 0),
+            'PUT OI CHNG': pe_data.get('changeinOpenInterest', 0),
             'PUT OI': pe_data.get('openInterest', 0)
         })
     
     df = pd.DataFrame(option_data)
     
     metadata = pd.DataFrame([{
-        'CALL OI': '', 'CALL CHNG IN OI': '', 'CALL VOLUME': '', 'CALL IV': '',
+        'CALL OI': '', 'CALL OI CHNG': '', 'CALL VOLUME': '', 'CALL IV': '',
         'CALL CHNG': '', 'CALL LTP': '', 'STRIKE': f"{underlying_value}",
         'PUT LTP': 'Expiry: ' + expiry_date, 'PUT CHNG': '', 'PUT IV': '',
-        'PUT VOLUME': '', 'PUT CHNG IN OI': '', 'PUT OI': ''
+        'PUT VOLUME': '', 'PUT OI CHNG': '', 'PUT OI': ''
     }])
     
     ist = pytz.timezone('Asia/Kolkata')
     current_time = datetime.now(ist).strftime('%d-%b %H:%M')
     
     timestamp_row = pd.DataFrame([{
-        'CALL OI': '', 'CALL CHNG IN OI': '', 'CALL VOLUME': '', 'CALL IV': '',
+        'CALL OI': '', 'CALL OI CHNG': '', 'CALL VOLUME': '', 'CALL IV': '',
         'CALL CHNG': '', 'CALL LTP': '', 'STRIKE': '',
         'PUT LTP': '', 'PUT CHNG': '', 'PUT IV': '', 'PUT VOLUME': '',
-        'PUT CHNG IN OI': 'Update Time', 'PUT OI': current_time
+        'PUT OI CHNG': 'Update Time', 'PUT OI': current_time
     }])
     
     df = pd.concat([metadata, df, timestamp_row], ignore_index=True)
