@@ -1,258 +1,62 @@
-import requests
-import pandas as pd
-from datetime import datetime, timedelta, time
-import pytz
-import os
-import sys
+import requests, pandas as pd, os, pytz
+from datetime import datetime
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from iv_calculator import CalcIvGreeks, TryMatchWith
+headers = {'User-Agent': 'Mozilla/5.0'}
+TV_SYMBOLS = {"USD/INR": "FX_IDC:USDINR", "GIFT-NIFTY": "NSEIX:NIFTY1!", "GOLD": "MCX:GOLD1!", "SILVER": "MCX:SILVER1!", "IND 5Y": "TVC:IN05Y", "IND 10Y": "TVC:IN10Y", "IND 30Y": "TVC:IN30Y"}
+target_indices = ["NIFTY 50", "INDIA VIX", "GIFT-NIFTY", "USD/INR", "GOLD", "SILVER", "IND 5Y", "IND 10Y", "IND 30Y", "NIFTY NEXT 50", "NIFTY MIDCAP SELECT", "NIFTY MIDCAP 50", "NIFTY SMALLCAP 50", "NIFTY 500", "NIFTY ALPHA 50", "NIFTY IT", "NIFTY BANK", "NIFTY FINANCIAL SERVICES", "NIFTY PSU BANK", "NIFTY PRIVATE BANK", "NIFTY FMCG", "NIFTY CONSUMER DURABLES", "NIFTY PHARMA", "NIFTY HEALTHCARE INDEX", "NIFTY METAL", "NIFTY AUTO", "NIFTY SERVICES SECTOR", "NIFTY OIL & GAS", "NIFTY CHEMICALS", "NIFTY COMMODITIES", "NIFTY INDIA CONSUMPTION", "NIFTY PSE"]
 
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
-    'Accept': 'application/json',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Referer': 'https://www.nseindia.com/option-chain'
-}
+def format_index_name(name):
+    if name == "NIFTY INDIA CONSUMPTION": return "CONSUMPTION"
+    return name.replace("NIFTY ", "") if name.startswith("NIFTY ") and name not in ["NIFTY 50", "NIFTY 500", "GIFT-NIFTY"] else name
 
-def get_future_price(symbol="NIFTY"):
+def format_value(value, key, index_name):
+    if value == '-' or value is None: return '-'
     try:
-        if "NIFTY" in symbol.upper():
-            url = "https://scanner.tradingview.com/symbol?symbol=NSEIX:NIFTY1!&fields=close&no_404=true"
-            response = requests.get(url, headers=headers, timeout=5)
-            data = response.json()
-            return float(data.get('close', 0))
-        return 0
-    except Exception as e:
-        print(f"Warning: Could not fetch future price: {e}")
-        return 0
+        if key in ['% Chng', 'Adv:Dec']: return f"{float(value):.2f}%" if key == '% Chng' else f"{float(value):.2f}"
+        if index_name in ["INDIA VIX", "USD/INR", "IND 5Y", "IND 10Y", "IND 30Y"]:
+            return f"{float(value):.2f}" if key in ['LTP', 'Chng', 'Previous', 'Yr Hi', 'Yr Lo'] else str(float(value))
+        if key in ['Chng', 'LTP', 'Previous', 'Yr Hi', 'Yr Lo']:
+            return str(int(float(value))) if '.' in str(value) else str(float(value))
+        return str(float(value))
+    except: return '-'
 
-def get_next_tuesday():
-    ist = pytz.timezone('Asia/Kolkata')
-    now = datetime.now(ist)
-    today = now.date()
-    days_ahead = 1 - today.weekday()
-    
-    if days_ahead < 0 or (days_ahead == 0 and now.hour >= 16):
-        days_ahead += 7
-    
-    next_tuesday = today + timedelta(days=days_ahead)
-    return next_tuesday.strftime('%d-%b-%Y').upper()
 
-def round_to_nearest_100(price):
-    return round(price / 100) * 100
+index_dict = {}
+for name, symbol in TV_SYMBOLS.items():
+    url = f"https://scanner.tradingview.com/symbol?symbol={symbol}&fields=close[1],change_abs,price_52_week_high,price_52_week_low,close,change&no_404=true"
+    try:
+        data = requests.get(url, headers=headers, timeout=5).json()
+        index_dict[name] = {
+            'Index': format_index_name(name), 'LTP': data.get('close'), 'Chng': data.get('change_abs'),
+            '% Chng': data.get('change'), 'Previous': data.get('close[1]'), 'Adv:Dec': '-',
+            'Yr Hi': data.get('price_52_week_high'), 'Yr Lo': data.get('price_52_week_low')
+        }
+    except: pass
 
-def get_filtered_strike_prices(data, strike_range=10):
-    underlying_value = data['records']['underlyingValue']
-    rounded_strike = round_to_nearest_100(underlying_value)
-    
-    all_strikes = sorted([item['strikePrice'] for item in data['records']['data'] if item['strikePrice'] % 100 == 0])
-    
-    target_index = all_strikes.index(rounded_strike) if rounded_strike in all_strikes else \
-                   min(range(len(all_strikes)), key=lambda i: abs(all_strikes[i] - rounded_strike))
-    
-    start_index = max(0, target_index - strike_range)
-    end_index = min(len(all_strikes), target_index + strike_range + 1)
-    
-    return all_strikes[start_index:end_index], underlying_value, rounded_strike, target_index - start_index
+try:
+    data = requests.get("https://www.nseindia.com/api/allIndices", headers=headers, timeout=5).json()
+    for item in data.get('data', []):
+        name = item.get('index')
+        if name in TV_SYMBOLS or name not in target_indices: continue
+        adv, dec = int(item.get('advances', 0)), int(item.get('declines', 0))
+        adv_dec = f"{adv/dec:.2f}" if dec != 0 else "Max" if adv > 0 else "-"
+        index_dict[name] = {
+            'Index': format_index_name(name), 'LTP': item.get('last'), 'Chng': item.get('variation'),
+            '% Chng': item.get('percentChange'), 'Previous': item.get('previousClose'), 'Adv:Dec': adv_dec,
+            'Yr Hi': item.get('yearHigh'), 'Yr Lo': item.get('yearLow')
+        }
+except: pass
 
-def get_option_chain(symbol="NIFTY", expiry=None):
-    if expiry is None:
-        expiry = get_next_tuesday()
-    
-    url = f"https://www.nseindia.com/api/option-chain-v3?type=Indices&symbol={symbol}&expiry={expiry}"
-    
-    session = requests.Session()
-    session.headers.update(headers)
-    session.get("https://www.nseindia.com")
-    
-    response = session.get(url)
-    data = response.json()
-    
-    return data, expiry
-
-def find_atm_strike_and_prices(df, spot_price):
-    valid_rows = []
-    for _, row in df.iterrows():
-        if isinstance(row['STRIKE'], (int, float)):
-            valid_rows.append(row)
-    
-    if not valid_rows:
-        return None, 0, 0
-    
-    atm_strike = min(valid_rows, key=lambda x: abs(x['STRIKE'] - spot_price))['STRIKE']
-    
-    atm_row = None
-    for _, row in df.iterrows():
-        if row['STRIKE'] == atm_strike:
-            atm_row = row
-            break
-    
-    if atm_row is None:
-        return atm_strike, 0, 0
-    
-    atm_call_price = float(atm_row['CALL LTP']) if atm_row['CALL LTP'] not in ['', None] else 0
-    atm_put_price = float(atm_row['PUT LTP']) if atm_row['PUT LTP'] not in ['', None] else 0
-    
-    return atm_strike, atm_call_price, atm_put_price
-
-def calculate_iv_for_dataframe(df, spot_price, future_price, expiry_datetime):
-    atm_strike, atm_call_price, atm_put_price = find_atm_strike_and_prices(df, spot_price)
-    
-    if atm_strike is None:
-        return [''] * len(df)
-    
-    iv_values = []
-    
-    for _, row in df.iterrows():
-        if not isinstance(row['STRIKE'], (int, float)):
-            iv_values.append('')
-            continue
-            
-        strike = float(row['STRIKE'])
-        
-        call_price = float(row['CALL LTP']) if row['CALL LTP'] not in ['', None] else 0
-        put_price = float(row['PUT LTP']) if row['PUT LTP'] not in ['', None] else 0
-        
-        if call_price <= 0 and put_price <= 0:
-            iv_values.append('')
-            continue
-        
-        calc_call_price = max(call_price, 0.01)
-        calc_put_price = max(put_price, 0.01)
-        
-        try:
-            calculator = CalcIvGreeks(
-                SpotPrice=spot_price,
-                FuturePrice=future_price,
-                AtmStrike=atm_strike,
-                AtmStrikeCallPrice=atm_call_price if atm_call_price > 0 else 1.0,
-                AtmStrikePutPrice=atm_put_price if atm_put_price > 0 else 1.0,
-                ExpiryDateTime=expiry_datetime,
-                StrikePrice=strike,
-                StrikeCallPrice=calc_call_price,
-                StrikePutPrice=calc_put_price,
-                tryMatchWith=TryMatchWith.SENSIBULL
-            )
-            
-            if strike < atm_strike:
-                iv = calculator.PutImplVol() * 100
-            else:
-                iv = calculator.CallImplVol() * 100
-            
-            if iv > 0:
-                iv_values.append(round(iv, 2))
-            else:
-                iv_values.append('')
-                
-        except Exception:
-            iv_values.append('')
-    
-    return iv_values
-
-def create_option_chain_dataframe(data, expiry_date):
-    filtered_strikes, underlying_value, rounded_strike, _ = get_filtered_strike_prices(data)
-    
-    strike_map = {item['strikePrice']: item for item in data['records']['data'] if item['strikePrice'] % 100 == 0}
-    
-    option_data = []
-    inserted_underlying = False
-    
-    for strike in filtered_strikes:
-        if strike not in strike_map:
-            continue
-        
-        if strike > underlying_value and not inserted_underlying:
-            option_data.append({
-                'CALL OI': '', 'CALL OI CHNG': '', 'CALL VOLUME': '', 
-                'CALL CHNG': '', 'CALL LTP': '', 'STRIKE': f"{underlying_value}",
-                'PUT LTP': 'Expiry: ' + expiry_date, 'PUT CHNG': '', 
-                'PUT VOLUME': '', 'PUT OI CHNG': '', 'PUT OI': ''
-            })
-            inserted_underlying = True
-        
-        item = strike_map[strike]
-        ce_data = item.get('CE', {})
-        pe_data = item.get('PE', {})
-        
-        option_data.append({
-            'CALL OI': ce_data.get('openInterest', 0),
-            'CALL OI CHNG': ce_data.get('changeinOpenInterest', 0),
-            'CALL VOLUME': ce_data.get('totalTradedVolume', 0),
-            'CALL CHNG': ce_data.get('change', 0),
-            'CALL LTP': ce_data.get('lastPrice', 0),
-            'STRIKE': strike,
-            'PUT LTP': pe_data.get('lastPrice', 0),
-            'PUT CHNG': pe_data.get('change', 0),
-            'PUT VOLUME': pe_data.get('totalTradedVolume', 0),
-            'PUT OI CHNG': pe_data.get('changeinOpenInterest', 0),
-            'PUT OI': pe_data.get('openInterest', 0)
-        })
-    
-    if not inserted_underlying:
-        option_data.append({
-            'CALL OI': '', 'CALL OI CHNG': '', 'CALL VOLUME': '', 
-            'CALL CHNG': '', 'CALL LTP': '', 'STRIKE': f"{underlying_value}",
-            'PUT LTP': 'Expiry: ' + expiry_date, 'PUT CHNG': '', 
-            'PUT VOLUME': '', 'PUT OI CHNG': '', 'PUT OI': ''
-        })
-    
-    df = pd.DataFrame(option_data)
-    
-    spot_price = underlying_value
-    future_price = get_future_price()
-    
-    expiry_datetime = datetime.strptime(expiry_date, '%d-%b-%Y')
-    expiry_datetime = expiry_datetime.replace(hour=15, minute=30, second=0)
-    expiry_datetime = pytz.timezone('Asia/Kolkata').localize(expiry_datetime)
-    
-    iv_column = calculate_iv_for_dataframe(df, spot_price, future_price, expiry_datetime)
-    
-    df['IV'] = iv_column
-    
-    columns_order = ['CALL OI', 'CALL OI CHNG', 'CALL VOLUME', 'CALL CHNG', 'CALL LTP',
-                     'STRIKE', 'IV', 
-                     'PUT LTP', 'PUT CHNG', 'PUT VOLUME', 'PUT OI CHNG', 'PUT OI']
-    df = df[columns_order]
-    
-    ist = pytz.timezone('Asia/Kolkata')
-    current_time = datetime.now(ist).strftime('%d-%b %H:%M')
-    
-    timestamp_row = pd.DataFrame([{
-        'CALL OI': '', 'CALL OI CHNG': '', 'CALL VOLUME': '', 
-        'CALL CHNG': '', 'CALL LTP': '', 'STRIKE': '',
-        'IV': '', 
-        'PUT LTP': '', 'PUT CHNG': '', 'PUT VOLUME': '',
-        'PUT OI CHNG': 'Update Time', 'PUT OI': current_time
-    }])
-    
-    df = pd.concat([df, timestamp_row], ignore_index=True)
-    
-    return df
-
-def main():
-    ist = pytz.timezone('Asia/Kolkata')
-    expiry_date = get_next_tuesday()
-    
-    data, expiry = get_option_chain(expiry=expiry_date)
-    
-    if data:
-        df = create_option_chain_dataframe(data, expiry)
-        os.makedirs('Data', exist_ok=True)
-        
-        output_file = 'Data/Option.csv'
-        df.to_csv(output_file, index=False)
-        
-        current_time = datetime.now(ist).strftime('%d-%b %H:%M')
-        
-        print(f"Option chain saved to: {output_file}")
-        print(f"Timestamp: {current_time} IST")
-        print(f"Underlying: {data['records']['underlyingValue']}")
-        print(f"Expiry: {expiry}")
-        print(f"Rows: {len(df)}")
-        
+records = []
+for idx in target_indices:
+    formatted_name = format_index_name(idx)
+    if idx in index_dict:
+        rec = {k: format_value(v, k, idx) for k, v in index_dict[idx].items()}
+        rec['Index'] = formatted_name
     else:
-        print("Failed to fetch option chain data")
+        rec = {'Index': formatted_name, 'LTP': '-', 'Chng': '-', '% Chng': '-', 'Previous': '-', 'Adv:Dec': '-', 'Yr Hi': '-', 'Yr Lo': '-'}
+    records.append(rec)
 
-if __name__ == "__main__":
-    main()
+records.append({'Index': '', 'LTP': '', 'Chng': '', '% Chng': '', 'Previous': '', 'Adv:Dec': '', 'Yr Hi': 'Updated Time:', 'Yr Lo': datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%d-%b %H:%M')})
+os.makedirs('Data', exist_ok=True)
+pd.DataFrame(records).to_csv('Data/nse_all_indices.csv', index=False)
