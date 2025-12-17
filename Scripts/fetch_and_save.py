@@ -16,13 +16,10 @@ def format_value(value, key, index_name):
         if index_name in ["INDIA VIX", "USD/INR", "IND 5Y", "IND 10Y", "IND 30Y"]:
             return f"{float(value):.2f}" if key in ['LTP', 'Chng', 'Previous', 'Yr Hi', 'Yr Lo'] else str(float(value))
         if key in ['Chng', 'LTP', 'Previous', 'Yr Hi', 'Yr Lo']:
-            val = float(value)
-            if val.is_integer():
-                return str(int(val))
-            else:
-                return f"{val:.2f}".rstrip('0').rstrip('.') if '.' in str(val) else str(val)
+            return str(int(float(value))) if '.' in str(value) else str(float(value))
         return str(float(value))
     except: return '-'
+
 
 index_dict = {}
 for name, symbol in TV_SYMBOLS.items():
