@@ -9,7 +9,11 @@ data = response.json()
 
 os.makedirs("Data", exist_ok=True)
 
-with open("Data/Cash.csv", "w", newline="") as f:
+csv_path = "Data/Cash.csv"
+if os.path.exists(csv_path):
+    os.remove(csv_path)
+
+with open(csv_path, "w", newline="") as f:
     writer = csv.writer(f)
     writer.writerow(["Date", "FII Net Buy/Sell", "DII Net Buy/Sell"])
     
