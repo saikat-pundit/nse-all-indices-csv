@@ -13,8 +13,10 @@ def format_value(value, key, index_name):
     if value == '-' or value is None: return '-'
     try:
         if key in ['% Chng', 'Adv:Dec']: return f"{float(value):.2f}%" if key == '% Chng' else f"{float(value):.2f}"
-        if key == 'LTP' and index_name in ["INDIA VIX", "USD/INR", "IND 5Y", "IND 10Y", "IND 30Y"]: return f"{float(value):.2f}"
-        if key in ['Chng', 'LTP', 'Previous', 'Yr Hi', 'Yr Lo']: return str(int(float(value))) if '.' in str(value) else str(float(value))
+        if index_name in ["INDIA VIX", "USD/INR", "IND 5Y", "IND 10Y", "IND 30Y"]:
+            return f"{float(value):.2f}" if key in ['LTP', 'Chng', 'Previous', 'Yr Hi', 'Yr Lo'] else str(float(value))
+        if key in ['Chng', 'LTP', 'Previous', 'Yr Hi', 'Yr Lo']:
+            return str(int(float(value))) if '.' in str(value) else str(float(value))
         return str(float(value))
     except: return '-'
 
