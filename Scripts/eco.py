@@ -1,84 +1,44 @@
-import requests
-import pandas as pd
+import requests, csv, os, pandas as pd
 from datetime import datetime
-import pytz
-import os
 
-API_URL = "https://oxide.sensibull.com/v1/compute/market_global_events"
+# First CSV
+url1 = "https://oxide.sensibull.com/v1/compute/cache/fii_dii_daily"
+data1 = requests.get(url1).json()
+os.makedirs("Data", exist_ok=True)
 
-headers = {
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    'Accept-Encoding': 'gzip, deflate, br, zstd',
-    'Accept-Language': 'en-US,en;q=0.5',
-    'Connection': 'keep-alive',
-    'Content-Type': 'application/json',
-    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0',
-    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0, no-transform'
-}
+with open("Data/Cash.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow(["Date", "FII Net Buy/Sell", "DII Net Buy/Sell"])
+    for date_str in sorted(data1["data"], reverse=True):
+        day = data1["data"][date_str]
+        if "cash" in day:
+            formatted_date = datetime.strptime(date_str, "%Y-%m-%d").strftime("%d %b %y")
+            fii_val = int(day["cash"]["fii"]["buy_sell_difference"])
+            dii_val = int(day["cash"]["dii"]["buy_sell_difference"])
+            writer.writerow([formatted_date, f"{fii_val} Cr.", f"{dii_val} Cr."])
 
-payload = {
-    "from_date": "2025-12-01",
-    "to_date": "2025-12-31",
-    "countries": ["India", "China", "Japan", "Euro Area", "USA"],
-    "impacts": []
-}
+# Second CSV
+url2 = "https://oxide.sensibull.com/v1/compute/market_global_events"
+payload = {"from_date": "2025-12-01", "to_date": "2025-12-31", "countries": ["India", "China", "Japan", "Euro Area", "USA"], "impacts": []}
+headers = {'User-Agent': 'Mozilla/5.0', 'Content-Type': 'application/json'}
+data2 = requests.post(url2, headers=headers, json=payload).json()
 
-def format_date(date_str):
-    try:
-        return datetime.strptime(date_str, "%Y-%m-%d").strftime("%d %b %y")
-    except:
-        return date_str
-
-def format_time(time_str):
-    try:
-        return time_str[:5] if time_str and len(time_str) >= 5 else time_str
-    except:
-        return time_str
-
-def process_and_save():
-    try:
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            if data.get('success') and 'payload' in data:
-                raw_data = data['payload'].get('data', [])
-            else:
-                raw_data = []
-        else:
-            raw_data = []
-    except:
-        raw_data = []
-    
-    records = []
-    
-    for item in raw_data:
-        records.append({
-            'Date': format_date(item.get('date', '')),
-            'Time': format_time(item.get('time', '')),
-            'Country': item.get('country', ''),
-            'Title': item.get('title', ''),
-            'Impact': item.get('impact', '').capitalize(),
-            'Actual': item.get('actual', ''),
-            'Expected': item.get('expected', ''),
-            'Previous': item.get('previous', '')
-        })
-    
-    # Add timestamp row at the end
-    current_time = datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%d-%b %H:%M')
+records = []
+for item in data2.get('payload', {}).get('data', []):
     records.append({
-        'Date': '',
-        'Time': '',
-        'Country': '',
-        'Title': '',
-        'Impact': '',
-        'Actual': '',
-        'Expected': 'Update Time:',
-        'Previous': current_time
+        'Date': datetime.strptime(item.get('date', ''), "%Y-%m-%d").strftime("%d %b %y") if item.get('date') else '',
+        'Time': item.get('time', '')[:5] if item.get('time') else '',
+        'Country': item.get('country', ''),
+        'Title': item.get('title', ''),
+        'Impact': item.get('impact', '').capitalize(),
+        'Actual': item.get('actual', ''),
+        'Expected': item.get('expected', ''),
+        'Previous': item.get('previous', '')
     })
-    
-    # Save to CSV
-    os.makedirs('Data', exist_ok=True)
-    pd.DataFrame(records).to_csv('Data/Economic.csv', index=False)
 
-# Execute
-process_and_save()
+records.append({
+    'Date': '', 'Time': '', 'Country': '', 'Title': '', 'Impact': '', 'Actual': '',
+    'Expected': 'Update Time:', 'Previous': datetime.now().strftime('%d-%b %H:%M')
+})
+
+pd.DataFrame(records).to_csv('Data/Economic.csv', index=False)
