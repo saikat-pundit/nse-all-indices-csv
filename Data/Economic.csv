@@ -8,9 +8,9 @@ Date,Time,Country,Title,Impact,Actual,Expected,Previous
 15 Dec,12:00,India,WPI Inflation YoY NOV,★★,-0.32%,-0.60%,-1.21%
 16 Dec,19:00,USA,Non Farm Payrolls OCT,★★,-105K,,108K
 16 Dec,19:00,USA,Non Farm Payrolls NOV,★★,64K,50K,-105K
-18 Dec,18:45,Euro Area,ECB Interest Rate Decision,★★,,2.15%,2.15%
-18 Dec,19:00,USA,Inflation Rate YoY NOV,★★,,3.20%,
-18 Dec,19:00,USA,Initial Jobless Claims DEC/13,★★,,230K,236K
+18 Dec,18:45,Euro Area,ECB Interest Rate Decision,★★,2.15%,2.15%,2.15%
+18 Dec,19:00,USA,Inflation Rate YoY NOV,★★,2.70%,3.10%,
+18 Dec,19:00,USA,Initial Jobless Claims DEC/13,★★,224K,	225K,237K
 19 Dec,08:30,Japan,BoJ Interest Rate Decision,★★,,0.75%,0.50%
 19 Dec,20:30,USA,Existing Home Sales NOV,★★,,,4.1M
 23 Dec,19:45,USA,Industrial Production YoY OCT,★,,,1.60%
@@ -21,4 +21,4 @@ Date,Time,Country,Title,Impact,Actual,Expected,Previous
 28 Dec,16:00,India,Industrial Production YoY NOV,★★,,,0.40%
 31 Dec,00:30,USA,FOMC Minutes,★★★,,,
 31 Dec,07:00,China,NBS Manufacturing PMI DEC,★★,,,49.2
-,,,,,,Update Time:,18-Dec 19:10
+,,,,,,Update Time:,18-Dec 19:20
