@@ -1,10 +1,5 @@
-import requests
-import pandas as pd
-from datetime import datetime
-import pytz
-import os
-
-API_URL = "https://oxide.sensibull.com/v1/compute/market_global_events"
+import requests, pandas as pd, os, pytz
+from datetime import datetime, timedelta
 
 headers = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -16,69 +11,49 @@ headers = {
     'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0, no-transform'
 }
 
+today = datetime.now()
 payload = {
-    "from_date": "2025-12-01",
-    "to_date": "2025-12-31",
+    "from_date": (today - timedelta(days=15)).strftime("%Y-%m-%d"),
+    "to_date": (today + timedelta(days=15)).strftime("%Y-%m-%d"),
     "countries": ["India", "China", "Japan", "Euro Area", "USA"],
     "impacts": []
 }
 
-def format_date(date_str):
-    try:
-        return datetime.strptime(date_str, "%Y-%m-%d").strftime("%d %b %y")
-    except:
-        return date_str
+try:
+    data = requests.post("https://oxide.sensibull.com/v1/compute/market_global_events", headers=headers, json=payload, timeout=10).json()
+    raw_data = data.get('payload', {}).get('data', []) if data.get('success') else []
+except:
+    raw_data = []
 
-def format_time(time_str):
-    try:
-        return time_str[:5] if time_str and len(time_str) >= 5 else time_str
-    except:
-        return time_str
+def impact_to_stars(impact):
+    if "high" in impact.lower(): return "★★★"
+    if "medium" in impact.lower(): return "★★"
+    if "low" in impact.lower(): return "★"
+    return impact.capitalize()
 
-def process_and_save():
+records = []
+for item in raw_data:
+    date_str = item.get('date', '')
     try:
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            if data.get('success') and 'payload' in data:
-                raw_data = data['payload'].get('data', [])
-            else:
-                raw_data = []
-        else:
-            raw_data = []
+        formatted_date = datetime.strptime(date_str, "%Y-%m-%d").strftime("%d %b %y")
     except:
-        raw_data = []
+        formatted_date = date_str
     
-    records = []
-    
-    for item in raw_data:
-        records.append({
-            'Date': format_date(item.get('date', '')),
-            'Time': format_time(item.get('time', '')),
-            'Country': item.get('country', ''),
-            'Title': item.get('title', ''),
-            'Impact': item.get('impact', '').capitalize(),
-            'Actual': item.get('actual', ''),
-            'Expected': item.get('expected', ''),
-            'Previous': item.get('previous', '')
-        })
-    
-    # Add timestamp row at the end
-    current_time = datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%d-%b %H:%M')
     records.append({
-        'Date': '',
-        'Time': '',
-        'Country': '',
-        'Title': '',
-        'Impact': '',
-        'Actual': '',
-        'Expected': 'Update Time:',
-        'Previous': current_time
+        'Date': formatted_date,
+        'Time': item.get('time', '')[:5] if item.get('time') else '',
+        'Country': item.get('country', ''),
+        'Title': item.get('title', ''),
+        'Impact': impact_to_stars(item.get('impact', '')),
+        'Actual': item.get('actual', ''),
+        'Expected': item.get('expected', ''),
+        'Previous': item.get('previous', '')
     })
-    
-    # Save to CSV
-    os.makedirs('Data', exist_ok=True)
-    pd.DataFrame(records).to_csv('Data/Economic.csv', index=False)
 
-# Execute
-process_and_save()
+records.append({
+    'Date': '', 'Time': '', 'Country': '', 'Title': '', 'Impact': '', 'Actual': '',
+    'Expected': 'Update Time:', 'Previous': datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%d-%b %H:%M')
+})
+
+os.makedirs('Data', exist_ok=True)
+pd.DataFrame(records).to_csv('Data/Economic.csv', index=False)
