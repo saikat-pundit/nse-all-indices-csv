@@ -74,7 +74,7 @@ for fund in data['data']:
                 else:
                     date_only = '-'
                 nav_data[display_name] = {
-                    'Fund NAV': nav['hNAV_Amt'],
+                    'NAV': nav['hNAV_Amt'],
                     'Update Time': date_only
                 }
 
@@ -85,21 +85,21 @@ for display_name in display_names:
     if display_name in nav_data:
         sorted_records.append({
             'Fund Name': display_name,
-            'Fund NAV': nav_data[display_name]['Fund NAV'],
+            'NAV': nav_data[display_name]['NAV'],
             'Update Time': nav_data[display_name]['Update Time']
         })
         funds_found += 1
     else:
         sorted_records.append({
             'Fund Name': display_name,
-            'Fund NAV': '-',
+            'NAV': '-',
             'Update Time': '-'
         })
 
 timestamp = datetime.now(ist).strftime('%d-%b %H:%M')
 sorted_records.append({
     'Fund Name': '',
-    'Fund NAV': 'LAST UPDATED:',
+    'NAV': 'LAST UPDATED:',
     'Update Time': f'{timestamp}'
 })
 
