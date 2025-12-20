@@ -2,13 +2,14 @@ name: Daily Mutual Fund NAV Update
 
 on:
   schedule:
-    - cron: '30 0 * * 2-6'    # Mon-Sat 06:00 IST
-    - cron: '30 3 * * 2-6'    # Mon-Sat 09:00 IST  
-    - cron: '30 6 * * 2-6'    # Mon-Sat 12:00 IST
-    - cron: '30 9 * * 2-6'    # Mon-Sat 15:00 IST
-    - cron: '30 12 * * 2-6'   # Mon-Sat 18:00 IST
-    - cron: '30 15 * * 2-6'   # Mon-Sat 21:00 IST
-    - cron: '00 18 * * 2-6'   # Mon-Fri 00:00 IST (Next day)
+    - cron: '00 18 * * 2-6'   # Tue-Sat 00:00 IST
+    - cron: '30 21 * * 2-6'   # Tue-Sat 03:30 IST
+    - cron: '00 0 * * 3-6'    # Tue-Sat 06:00 IST
+    - cron: '30 3 * * 3-6'    # Tue-Sat 09:30 IST  
+    - cron: '00 6 * * 3-6'    # Tue-Sat 12:00 IST
+    - cron: '30 9 * * 3-6'    # Tue-Sat 15:30 IST
+    - cron: '00 12 * * 3-6'   # Tue-Sat 18:00 IST
+    - cron: '30 15 * * 3-6'   # Tue-Sat 21:30 IST
   workflow_dispatch:
 
 jobs:
