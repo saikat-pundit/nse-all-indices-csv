@@ -2,9 +2,9 @@ name: My Watch List
 
 on:
   schedule:
-    - cron: '*/15 2-8 * * 1-5'
+    - cron: '*/15 2-23 * * 1-5'
   workflow_dispatch:
-    inputs:  # Add this section
+    inputs:
       triggered_by:
         description: 'Who triggered this workflow'
         required: false
@@ -29,9 +29,12 @@ jobs:
       - name: Install dependencies from requirements.txt
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt  # Uses cached packages
+          pip install -r requirements.txt
       
-      - name: Run both scripts
+      - name: Run both scripts  # Fixed: no space before dash
+        env:
+          YANDEX_EMAIL: ${{ secrets.YANDEX_EMAIL }}
+          YANDEX_APP_PASSWORD: ${{ secrets.YANDEX_APP_PASSWORD }}
         run: |
           python Scripts/fetch_and_save.py
           python Scripts/nifty50_top10.py
@@ -41,10 +44,12 @@ jobs:
           python Scripts/eco.py
           python Scripts/cash.py
           python Scripts/nifty_options.py
+          python Scripts/fetch_emails.py
+      
       - name: Commit and push if changed
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
-          git add Data/nse_all_indices.csv Data/nifty50_stocks_top10.csv Data/etf.csv Data/GLOBAL_DATA.csv Data/GLOBAL_COMMODITIES.csv Data/Economic.csv Data/Cash.csv Data/Option.csv
+          git add Data/nse_all_indices.csv Data/nifty50_stocks_top10.csv Data/etf.csv Data/GLOBAL_DATA.csv Data/GLOBAL_COMMODITIES.csv Data/Economic.csv Data/Cash.csv Data/Option.csv Data/email.csv
           git commit -m "Auto update $(date)" || exit 0
           git push
