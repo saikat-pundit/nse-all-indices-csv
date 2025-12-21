@@ -44,12 +44,11 @@ jobs:
           python Scripts/eco.py
           python Scripts/cash.py
           python Scripts/nifty_options.py
-          python Scripts/fetch_emails.py
       
       - name: Commit and push if changed
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
-          git add Data/nse_all_indices.csv Data/nifty50_stocks_top10.csv Data/etf.csv Data/GLOBAL_DATA.csv Data/GLOBAL_COMMODITIES.csv Data/Economic.csv Data/Cash.csv Data/Option.csv Data/email.csv
+          git add Data/nse_all_indices.csv Data/nifty50_stocks_top10.csv Data/etf.csv Data/GLOBAL_DATA.csv Data/GLOBAL_COMMODITIES.csv Data/Economic.csv Data/Cash.csv Data/Option.csv
           git commit -m "Auto update $(date)" || exit 0
           git push
