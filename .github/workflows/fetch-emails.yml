@@ -1,34 +1,33 @@
 name: Fetch Yandex Emails
 on:
   schedule:
-    - cron: '0 */6 * * *'  # Every 6 hours
-  workflow_dispatch:  # Manual trigger option
+    - cron: '0 */6 * * *'  # Runs every 6 hours
+  workflow_dispatch:        # Allows manual trigger
 
 jobs:
   fetch-emails:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-      
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      
-      - name: Fetch emails and generate CSV
+
+      - name: Install pytz
+        run: pip install pytz==2024.1
+
+      - name: Fetch emails and save CSV
         env:
           YANDEX_EMAIL: ${{ secrets.YANDEX_EMAIL }}
           YANDEX_APP_PASSWORD: ${{ secrets.YANDEX_APP_PASSWORD }}
         run: python Scripts/fetch_emails.py
-      
-      - name: Upload CSV as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: email-exports
-          path: ./email_export_*.csv
+
+      - name: Commit and push Data/email.csv
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add Data/email.csv
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update email data [$(date +'%Y-%m-%d %H:%M')]" && git push)
