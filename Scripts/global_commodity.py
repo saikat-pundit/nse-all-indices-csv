@@ -1,59 +1,84 @@
-import requests, pandas as pd, os, pytz
+import imaplib, email, csv, os, sys, re, pytz
 from datetime import datetime
+from email.header import decode_header
 
-headers = {'User-Agent': 'Mozilla/5.0'}
-commodity_symbols = [
-    {"name": "GOLD", "symbol": "TVC:GOLD"},
-    {"name": "GOLD!", "symbol": "COMEX:GC1!"},
-    {"name": "SILVER", "symbol": "TVC:SILVER"},
-    {"name": "SILVER!", "symbol": "COMEX:SI1!"},
-    {"name": "GOLD:SILVER", "symbol": "TVC:GOLDSILVER"},
-    {"name": "DXY", "symbol": "TVC:DXY"},
-    {"name": "USD/INR", "symbol": "FX_IDC:USDINR"},
-    {"name": "US10Y", "symbol": "TVC:US10Y"},
-    {"name": "BRENT", "symbol": "FX:UKOIL"},
-    {"name": "GOLDINR", "symbol": "MCX:GOLD1!"},
-    {"name": "SILVERINR", "symbol": "MCX:SILVER1!"},
-    {"name": "GOLD ETF", "symbol": "NSE:GOLDBEES"},
-    {"name": "SILVER ETF", "symbol": "NSE:SILVERBEES"}
-]
+IST = pytz.timezone('Asia/Kolkata')
 
-def format_value(value, key, name):
-    if value is None: return "0"
+def decode_text(text):
+    if not text: return ""
+    return " ".join(
+        part.decode(enc if enc else 'utf-8', errors='ignore') if isinstance(part, bytes) else str(part)
+        for part, enc in decode_header(text)
+    )
+
+def extract_email(from_str):
+    match = re.search(r'<([^>]+)>', from_str)
+    return match.group(1).split('@')[0] if match else from_str.split('@')[0] if '@' in from_str else from_str
+
+def format_date(date_str):
     try:
-        if key == '%': return f"{float(value):.2f}%"
-        if name in ["GOLDINR", "SILVERINR"] and key in ['LTP', 'Chng', 'Prev.', 'Yr Hi', 'Yr Lo']:
-            val = float(value)
-            return str(int(val))
-        if key in ['LTP', 'Chng', 'Prev.', 'Yr Hi', 'Yr Lo']:
-            return f"{float(value):.2f}"
-        return str(float(value))
-    except: return "0"
-
-commodity_data = []
-for c in commodity_symbols:
-    try:
-        data = requests.get(f"https://scanner.tradingview.com/symbol?symbol={c['symbol']}&fields=close[1],change_abs,price_52_week_high,price_52_week_low,close,change&no_404=true", headers=headers, timeout=10).json()
-        commodity_data.append({
-            'Index': c["name"],
-            'LTP': format_value(data.get('close'), 'LTP', c["name"]),
-            'Chng': format_value(data.get('change_abs'), 'Chng', c["name"]),
-            '%': format_value(data.get('change'), '%', c["name"]),
-            'Prev.': format_value(data.get('close[1]'), 'Prev.', c["name"]),
-            'Yr Hi': format_value(data.get('price_52_week_high'), 'Yr Hi', c["name"]),
-            'Yr Lo': format_value(data.get('price_52_week_low'), 'Yr Lo', c["name"])
-        })
+        date_obj = email.utils.parsedate_to_datetime(date_str).astimezone(IST)
+        return date_obj.strftime('%d %b %H:%M')
     except:
-        commodity_data.append({
-            'Index': c["name"],
-            'LTP': "0", 'Chng': "0", '%': "0.00%",
-            'Prev.': "0", 'Yr Hi': "0", 'Yr Lo': "0"
-        })
+        return ''
 
-commodity_data.append({
-    'Index': '', 'LTP': '', 'Chng': '', '%': '',
-    'Prev.': '', 'Yr Hi': 'Update Time', 'Yr Lo': datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%d-%b %H:%M')
-})
+def fetch_emails():
+    user, pwd = os.getenv('YANDEX_EMAIL'), os.getenv('YANDEX_APP_PASSWORD')
+    if not user or not pwd: sys.exit('ERROR: Missing credentials')
 
-os.makedirs('Data', exist_ok=True)
-pd.DataFrame(commodity_data).to_csv('Data/GLOBAL_COMMODITIES.csv', index=False)
+    try:
+        mail = imaplib.IMAP4_SSL('imap.yandex.com', 993)
+        mail.login(user, pwd)
+        mail.select('INBOX')
+        
+        _, messages = mail.search(None, 'ALL')
+        email_ids = messages[0].split()[-100:]
+        
+        emails_data = []
+        for eid in reversed(email_ids):
+            _, msg_data = mail.fetch(eid, '(RFC822)')
+            msg = email.message_from_bytes(msg_data[0][1])
+            
+            date_time = format_date(msg.get('Date', ''))
+            from_raw = decode_text(msg.get('From', ''))
+            from_short = extract_email(from_raw)
+            subject = decode_text(msg.get('Subject', ''))
+            
+            body = ''
+            if msg.is_multipart():
+                for part in msg.walk():
+                    if part.get_content_type() == 'text/plain' and 'attachment' not in str(part.get('Content-Disposition')):
+                        try: body = part.get_payload(decode=True).decode('utf-8', errors='ignore')
+                        except: body = part.get_payload(decode=True).decode('latin-1', errors='ignore')
+                        break
+            else:
+                try: body = msg.get_payload(decode=True).decode('utf-8', errors='ignore')
+                except: body = msg.get_payload(decode=True).decode('latin-1', errors='ignore')
+            
+            emails_data.append([date_time, from_short, subject, body[:200].replace('\n', ' ').strip()])
+        
+        os.makedirs('Data', exist_ok=True)
+        
+        old_csv = 'Data/email.csv'
+        if os.path.exists(old_csv):
+            os.remove(old_csv)
+            print(f"🗑️ Deleted old file")
+        
+        # Add update time as last row
+        update_time = datetime.now(IST).strftime('%d-%b %H:%M')
+        emails_data.append(["", "", "Update time", f"IST time format: {update_time}"])
+        
+        with open('Data/email.csv', 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(['Date-Time', 'From', 'Subject', 'Body_Preview'])
+            writer.writerows(emails_data)
+        
+        print(f"✅ Saved {len(emails_data)-1} emails + update row (newest first)")
+        mail.close()
+        mail.logout()
+        
+    except Exception as e:
+        sys.exit(f'ERROR: {e}')
+
+if __name__ == "__main__":
+    fetch_emails()
