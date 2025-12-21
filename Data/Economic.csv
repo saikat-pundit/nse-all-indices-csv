@@ -1,5 +1,4 @@
 Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
-05 Dec,10:00,India,RBI Interest Rate Decision,★★★,5.25%,5.25%,5.50%
 11 Dec,00:30,USA,Fed Interest Rate Decision,★★★,3.75%,3.75%,4.00%
 11 Dec,19:00,USA,Initial Jobless Claims DEC/06,★★,236K,220K,192K
 12 Dec,16:00,India,Inflation Rate YoY NOV,★★,0.71%,0.70%,0.25%
@@ -14,10 +13,10 @@ Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
 19 Dec,20:30,USA,Existing Home Sales NOV,★★,4.13M,4.2M,4.11M
 23 Dec,19:45,USA,Industrial Production YoY OCT,★,,,1.60%
 23 Dec,19:45,USA,Industrial Production YoY NOV,★,,,
-23 Dec,20:30,USA,New Home Sales NOV,★★,,,
-24 Dec,19:00,USA,Initial Jobless Claims DEC/20,★★,,,
+24 Dec,19:00,USA,Initial Jobless Claims DEC/20,★★,,225K,224K
 25 Dec,00:00,India,Market Holiday - Christmas,★,,,
-28 Dec,16:00,India,Industrial Production YoY NOV,★★,,,0.40%
+29 Dec,16:00,India,Industrial Production YoY NOV,★★,,,0.40%
 31 Dec,00:30,USA,FOMC Minutes,★★★,,,
 31 Dec,07:00,China,NBS Manufacturing PMI DEC,★★,,,49.2
-,,,,,,Update Time:,19-Dec 23:50
+31 Dec,19:00,USA,Initial Jobless Claims DEC/27,★★,,,
+,,,,,,Update Time:,21-Dec 20:06
