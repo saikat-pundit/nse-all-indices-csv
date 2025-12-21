@@ -22,6 +22,9 @@ def format_date(date_str):
     except:
         return ''
 
+def clean_text(text):
+    return text.replace(',', '') if text else ''
+
 def fetch_emails():
     user, pwd = os.getenv('YANDEX_EMAIL'), os.getenv('YANDEX_APP_PASSWORD')
     if not user or not pwd: sys.exit('ERROR: Missing credentials')
@@ -39,10 +42,10 @@ def fetch_emails():
             _, msg_data = mail.fetch(eid, '(RFC822)')
             msg = email.message_from_bytes(msg_data[0][1])
             
-            date_time = format_date(msg.get('Date', ''))
+            date_time = clean_text(format_date(msg.get('Date', '')))
             from_raw = decode_text(msg.get('From', ''))
-            from_short = extract_email(from_raw)
-            subject = decode_text(msg.get('Subject', ''))
+            from_short = clean_text(extract_email(from_raw))
+            subject = clean_text(decode_text(msg.get('Subject', '')))
             
             body = ''
             if msg.is_multipart():
@@ -55,7 +58,8 @@ def fetch_emails():
                 try: body = msg.get_payload(decode=True).decode('utf-8', errors='ignore')
                 except: body = msg.get_payload(decode=True).decode('latin-1', errors='ignore')
             
-            emails_data.append([date_time, from_short, subject, body[:200].replace('\n', ' ').strip()])
+            body_clean = clean_text(body[:200].replace('\n', ' ').strip())
+            emails_data.append([date_time, from_short, subject, body_clean])
         
         os.makedirs('Data', exist_ok=True)
         
@@ -64,8 +68,7 @@ def fetch_emails():
             os.remove(old_csv)
             print(f"🗑️ Deleted old file")
         
-        # Add update time row
-        update_time = datetime.now(IST).strftime('%d %b %H:%M')
+        update_time = clean_text(datetime.now(IST).strftime('%d %b %H:%M'))
         emails_data.append(['', '', 'Update Time', update_time])
         
         with open('Data/email.csv', 'w', newline='', encoding='utf-8') as f:
