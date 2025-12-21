@@ -23,7 +23,7 @@ def format_date(date_str):
         return ''
 
 def clean_text(text):
-    return text.replace(',', '') if text else ''
+    return text.replace(',', ' ') if text else ''  # Changed to replace with space
 
 def fetch_emails():
     user, pwd = os.getenv('YANDEX_EMAIL'), os.getenv('YANDEX_APP_PASSWORD')
