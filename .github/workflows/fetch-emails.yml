@@ -25,7 +25,7 @@ jobs:
         env:
           YANDEX_EMAIL: ${{ secrets.YANDEX_EMAIL }}
           YANDEX_APP_PASSWORD: ${{ secrets.YANDEX_APP_PASSWORD }}
-        run: Scripts/python fetch_emails.py
+        run: python Scripts/fetch_emails.py
       
       - name: Upload CSV as artifact
         uses: actions/upload-artifact@v4
