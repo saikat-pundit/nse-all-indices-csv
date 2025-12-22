@@ -155,7 +155,8 @@ def find_atm_strike_and_prices(df, spot_price):
     return atm_strike, atm_call_price, atm_put_price
 
 def calculate_iv_for_dataframe(df, spot_price, future_price, expiry_datetime):
-    atm_strike, atm_call_price, atm_put_price = find_atm_strike_and_prices(df, spot_price)
+    # Use FUTURE price for ATM selection
+    atm_strike, atm_call_price, atm_put_price = find_atm_strike_and_prices(df, future_price)  # Changed
     
     if atm_strike is None:
         return [''] * len(df)
@@ -181,7 +182,7 @@ def calculate_iv_for_dataframe(df, spot_price, future_price, expiry_datetime):
         
         try:
             calculator = CalcIvGreeks(
-                SpotPrice=spot_price,
+                SpotPrice=spot_price,  # Keep spot for NSE mode compatibility
                 FuturePrice=future_price,
                 AtmStrike=atm_strike,
                 AtmStrikeCallPrice=atm_call_price if atm_call_price > 0 else 1.0,
@@ -193,7 +194,9 @@ def calculate_iv_for_dataframe(df, spot_price, future_price, expiry_datetime):
                 tryMatchWith=TryMatchWith.SENSIBULL
             )
             
-            if strike < atm_strike:
+            # Key change: Use future price comparison
+            # For SENSIBULL mode, compare strike with FUTURE price
+            if strike < future_price:  # Changed from strike < atm_strike
                 iv = calculator.PutImplVol() * 100
             else:
                 iv = calculator.CallImplVol() * 100
@@ -210,7 +213,8 @@ def calculate_iv_for_dataframe(df, spot_price, future_price, expiry_datetime):
 
 def create_option_chain_dataframe(data, expiry_date):
     filtered_strikes, underlying_value, rounded_strike, _ = get_filtered_strike_prices(data)
-    
+    future_price = get_future_price()
+    atm_strike, atm_call_price, atm_put_price = find_atm_strike_and_prices(df, future_price)
     strike_map = {item['strikePrice']: item for item in data['records']['data'] if item['strikePrice'] % 100 == 0}
     
     option_data = []
