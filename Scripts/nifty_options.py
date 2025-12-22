@@ -65,7 +65,6 @@ def main():
     else:
         print("Failed to fetch option chain data")
 
-# Rest of your functions remain the same...
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
     'Accept': 'application/json',
@@ -129,7 +128,10 @@ def get_option_chain(symbol="NIFTY", expiry=None):
     
     return data, expiry
 
-def find_atm_strike_and_prices(df, spot_price):
+def find_atm_strike_and_prices(df, reference_price):
+    """
+    Find ATM strike based on reference price (could be spot or future)
+    """
     valid_rows = []
     for _, row in df.iterrows():
         if isinstance(row['STRIKE'], (int, float)):
@@ -138,7 +140,8 @@ def find_atm_strike_and_prices(df, spot_price):
     if not valid_rows:
         return None, 0, 0
     
-    atm_strike = min(valid_rows, key=lambda x: abs(x['STRIKE'] - spot_price))['STRIKE']
+    # Use reference_price (future_price in sensibull mode)
+    atm_strike = min(valid_rows, key=lambda x: abs(x['STRIKE'] - reference_price))['STRIKE']
     
     atm_row = None
     for _, row in df.iterrows():
@@ -154,9 +157,21 @@ def find_atm_strike_and_prices(df, spot_price):
     
     return atm_strike, atm_call_price, atm_put_price
 
+def should_use_call_iv(strike, reference_price, mode='sensibull'):
+    """
+    Determine whether to use Call IV or Put IV for a given strike
+    For SENSIBULL mode: use reference_price (future price)
+    """
+    if mode == 'sensibull':
+        # For sensibull: use reference price (future price) as the cutoff
+        return strike >= reference_price
+    else:
+        # For other modes: use ATM strike (not implemented here)
+        return strike >= reference_price
+
 def calculate_iv_for_dataframe(df, spot_price, future_price, expiry_datetime):
-    # Use FUTURE price for ATM selection
-    atm_strike, atm_call_price, atm_put_price = find_atm_strike_and_prices(df, future_price)  # Changed
+    # Use FUTURE price for ATM selection in SENSIBULL mode
+    atm_strike, atm_call_price, atm_put_price = find_atm_strike_and_prices(df, future_price)
     
     if atm_strike is None:
         return [''] * len(df)
@@ -177,8 +192,13 @@ def calculate_iv_for_dataframe(df, spot_price, future_price, expiry_datetime):
             iv_values.append('')
             continue
         
-        calc_call_price = max(call_price, 0.01)
-        calc_put_price = max(put_price, 0.01)
+        # Check for intrinsic value violations
+        call_intrinsic = max(0, future_price - strike)
+        put_intrinsic = max(0, strike - future_price)
+        
+        # If price is below intrinsic, use minimum price that makes sense
+        calc_call_price = max(call_price, call_intrinsic + 0.01, 0.01)
+        calc_put_price = max(put_price, put_intrinsic + 0.01, 0.01)
         
         try:
             calculator = CalcIvGreeks(
@@ -194,12 +214,13 @@ def calculate_iv_for_dataframe(df, spot_price, future_price, expiry_datetime):
                 tryMatchWith=TryMatchWith.SENSIBULL
             )
             
-            # Key change: Use future price comparison
-            # For SENSIBULL mode, compare strike with FUTURE price
-            if strike < future_price:  # Changed from strike < atm_strike
-                iv = calculator.PutImplVol() * 100
-            else:
+            # Key change: Use future price comparison for SENSIBULL mode
+            use_call = should_use_call_iv(strike, future_price, mode='sensibull')
+            
+            if use_call:
                 iv = calculator.CallImplVol() * 100
+            else:
+                iv = calculator.PutImplVol() * 100
             
             if iv > 0:
                 iv_values.append(round(iv, 2))
@@ -213,8 +234,7 @@ def calculate_iv_for_dataframe(df, spot_price, future_price, expiry_datetime):
 
 def create_option_chain_dataframe(data, expiry_date):
     filtered_strikes, underlying_value, rounded_strike, _ = get_filtered_strike_prices(data)
-    future_price = get_future_price()
-    atm_strike, atm_call_price, atm_put_price = find_atm_strike_and_prices(df, future_price)
+    
     strike_map = {item['strikePrice']: item for item in data['records']['data'] if item['strikePrice'] % 100 == 0}
     
     option_data = []
