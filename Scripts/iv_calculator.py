@@ -76,7 +76,7 @@ class CalcIvGreeks:
         StrikePutPrice: Union[float, None] = None,
         ExpiryDateType: ExpType = ExpType.MONTHLY,
         FromDateTime: Union[dt, None] = None,
-        tryMatchWith: TryMatchWith = TryMatchWith.CUSTOM,  # Changed default to CUSTOM
+        tryMatchWith: TryMatchWith = TryMatchWith.CUSTOM,
         dayCountType: DayCountType = DayCountType.CALENDARDAYS,
         interestRate: float = 0.0,  # Interest rate for discounting only
     ) -> None:
@@ -91,21 +91,43 @@ class CalcIvGreeks:
         self.tryMatchWith = tryMatchWith
         self.F = FuturePrice  # Futures price is primary input for Black-76
         self.K0 = AtmStrike
-        self.C0 = AtmStrikeCallPrice
-        self.P0 = AtmStrikePutPrice
+        self.C0 = max(AtmStrikeCallPrice, 0.05)  # Minimum price of 5 paisa
+        self.P0 = max(AtmStrikePutPrice, 0.05)   # Minimum price of 5 paisa
         self.r = interestRate / 100  # Interest rate only for discounting
         
-        # For Black-76: Always use futures price, regardless of tryMatchWith
+        # For Black-76: Always use futures price
         self.S = self.F  # Black-76: F is used in place of S*exp(rT)
+        
+        # Store original prices for reference
+        self.original_C0 = AtmStrikeCallPrice
+        self.original_P0 = AtmStrikePutPrice
         
         if StrikePrice is not None:
             self.K = StrikePrice
         if StrikeCallPrice is not None:
-            self.C = StrikeCallPrice
+            self.C = max(StrikeCallPrice, 0.05) if StrikeCallPrice else 0.05
         if StrikePutPrice is not None:
-            self.P = StrikePutPrice
+            self.P = max(StrikePutPrice, 0.05) if StrikePutPrice else 0.05
         
         self.T = self.get_tte()
+        
+        # Validate ATM prices are reasonable
+        self._validate_atm_prices()
+
+    def _validate_atm_prices(self):
+        """Validate that ATM call and put prices are reasonable"""
+        # Check if both ATM prices are zero or very small
+        if self.original_C0 <= 0.01 and self.original_P0 <= 0.01:
+            print(f"Warning: Both ATM prices are low: Call={self.original_C0}, Put={self.original_P0}")
+        
+        # Check put-call parity for ATM options
+        synthetic_future = self.C0 - self.P0 + self.K0
+        price_difference = abs(synthetic_future - self.F)
+        
+        if price_difference > (self.F * 0.01):  # More than 1% difference
+            print(f"Warning: Put-call parity violation for ATM: "
+                  f"Future={self.F:.2f}, Synthetic={synthetic_future:.2f}, "
+                  f"Diff={price_difference:.2f}")
 
     def update(
         self,
@@ -122,8 +144,8 @@ class CalcIvGreeks:
         self.F = FuturePrice
         self.S = self.F  # Update S to current futures price
         self.K0 = AtmStrike
-        self.C0 = AtmStrikeCallPrice
-        self.P0 = AtmStrikePutPrice
+        self.C0 = max(AtmStrikeCallPrice, 0.05)
+        self.P0 = max(AtmStrikePutPrice, 0.05)
         self.T = self.get_tte()
 
     @staticmethod
@@ -147,8 +169,9 @@ class CalcIvGreeks:
             return 6.0  # Default 6% if fetch fails
 
     @staticmethod
-    def find_atm_strike(all_strikes: List[float], ltp: float) -> float:
-        return float(min(all_strikes, key=lambda x: abs(x - ltp)))
+    def find_atm_strike(all_strikes: List[float], future_price: float) -> float:
+        """Find ATM strike based on futures price"""
+        return float(min(all_strikes, key=lambda x: abs(x - future_price)))
 
     def refreshNow(self) -> None:
         if self.datePastType == FromDateType.DYNAMIC:
@@ -399,20 +422,22 @@ class CalcIvGreeks:
         if StrikePrice is not None:
             self.K = StrikePrice
         if StrikeCallPrice is not None:
-            self.C = StrikeCallPrice
+            self.C = max(StrikeCallPrice, 0.05) if StrikeCallPrice else 0.05
         if StrikePutPrice is not None:
-            self.P = StrikePutPrice
+            self.P = max(StrikePutPrice, 0.05) if StrikePutPrice else 0.05
         self.refreshNow()
         
         # Calculate both call and put IV
         CallIV = round(self.CallImplVol(), 6)
         PutIV = round(self.PutImplVol(), 6)
         
+        # FIXED: Determine OTM based on futures price, not just ATM strike
+        # OTM call when strike >= future price, OTM put when strike < future price
+        is_otm_call = self.K >= self.F
+        
         # Use OTM option's IV (more liquid and accurate)
         if useOtmLiquidity:
-            # For strikes >= ATM, use call IV (OTM call)
-            # For strikes < ATM, use put IV (OTM put)
-            StrikeIV = CallIV if self.K >= self.K0 else PutIV
+            StrikeIV = CallIV if is_otm_call else PutIV
         else:
             # Use average or other method if needed
             StrikeIV = (CallIV + PutIV) / 2
@@ -432,17 +457,20 @@ class CalcIvGreeks:
         return {
             **{
                 "Strike": self.K,
+                "FuturePrice": round(self.F, 2),
+                "IsOTMCall": is_otm_call,
                 "ImplVol": round(StrikeIV * 100, 2),
-                "FuturesPrice": round(self.F, 2),
+                "CallIV": round(CallIV * 100, 2),
+                "PutIV": round(PutIV * 100, 2),
             },
             **_,
             **{
                 "CallDelta": Delta,
-                "PutDelta": round(Delta - EXP(-self.r * self.T), 4),  # Black-76 put delta
-                "Theta": round((self.ThetaPut(StrikeIV) / 365), 4),  # Daily theta
-                "Vega": round((self.Vega(StrikeIV) / 100), 4),  # Vega per 1% vol change
-                "Gamma": round(self.Gamma(StrikeIV), 6),  # Gamma
-                "RhoCall": round(self.RhoCall(CallIV) / 100, 4),  # % per 1% rate change
+                "PutDelta": round(Delta - EXP(-self.r * self.T), 4),
+                "Theta": round((self.ThetaPut(StrikeIV) / 365), 4),
+                "Vega": round((self.Vega(StrikeIV) / 100), 4),
+                "Gamma": round(self.Gamma(StrikeIV), 6),
+                "RhoCall": round(self.RhoCall(CallIV) / 100, 4),
                 "RhoPut": round(self.RhoPut(PutIV) / 100, 4),
             },
         }
