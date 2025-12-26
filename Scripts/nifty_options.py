@@ -8,7 +8,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from iv_calculator import CalcIvGreeks, TryMatchWith
 
-# Define holidays
+# Define holidays (same as before)
 HOLIDAYS = [
     "2025-02-26", "2025-03-14", "2025-03-31", "2025-04-10",
     "2025-04-14", "2025-04-18", "2025-05-01", "2025-08-15",
@@ -20,7 +20,6 @@ HOLIDAYS = [
     "2026-12-25"
 ]
 
-# Convert holiday strings to date objects for easier comparison
 HOLIDAY_DATES = [datetime.strptime(holiday, "%Y-%m-%d").date() for holiday in HOLIDAYS]
 
 def is_market_day():
@@ -29,11 +28,9 @@ def is_market_day():
     ist_now = datetime.now(ist)
     current_date = ist_now.date()
     
-    # Check if it's a weekend
-    if ist_now.weekday() >= 5:  # 5=Saturday, 6=Sunday
+    if ist_now.weekday() >= 5:
         return False
     
-    # Check if it's a holiday
     if current_date in HOLIDAY_DATES:
         return False
     
@@ -44,18 +41,13 @@ def is_market_hours():
     ist = pytz.timezone('Asia/Kolkata')
     ist_now = datetime.now(ist)
     
-    # First check if it's a market day
     if not is_market_day():
         return False
     
-    # Get current time
     current_time = ist_now.time()
+    market_open = time(9, 15)
+    market_close = time(15, 40)
     
-    # Define market hours with buffer
-    market_open = time(9, 15)   # 9:15 AM (15 mins buffer)
-    market_close = time(15, 40) # 3:40 PM (10 mins buffer)
-    
-    # Check if within market hours (inclusive)
     return market_open <= current_time <= market_close
 
 def get_market_status_message():
@@ -66,13 +58,10 @@ def get_market_status_message():
     current_time_str = ist_now.strftime('%Y-%m-%d %H:%M:%S IST')
     weekday = ist_now.strftime('%A')
     
-    # Check weekend
     if ist_now.weekday() >= 5:
         return f"Market closed - {weekday} (Weekend)", False
     
-    # Check holiday
     if current_date in HOLIDAY_DATES:
-        # Find holiday name if available in original list
         holiday_str = ""
         for holiday in HOLIDAYS:
             if holiday.startswith(str(current_date)):
@@ -80,7 +69,6 @@ def get_market_status_message():
                 break
         return f"Market closed - {weekday}{holiday_str} (Holiday)", False
     
-    # Check market hours
     market_open = time(9, 15)
     market_close = time(15, 40)
     current_time = ist_now.time()
@@ -97,7 +85,6 @@ def get_market_status_message():
     return f"Market open - {weekday}", True
 
 def main():
-    # Get market status with detailed message
     status_message, is_open = get_market_status_message()
     ist = pytz.timezone('Asia/Kolkata')
     current_time = datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')
@@ -105,17 +92,14 @@ def main():
     print(f"Current time: {current_time}")
     print(f"Status: {status_message}")
     
-    # Exit if market is not open
     if not is_open:
         print("Script not running - outside trading hours")
         print("Exiting...")
         return
     
-    # Continue with the rest of the script only if market is open
     print("Fetching option chain data...")
     
     expiry_date = get_next_tuesday()
-    
     data, expiry = get_option_chain(expiry=expiry_date)
     
     if data:
@@ -132,7 +116,6 @@ def main():
         print(f"Underlying: {data['records']['underlyingValue']}")
         print(f"Expiry: {expiry}")
         print(f"Rows: {len(df)}")
-        
     else:
         print("Failed to fetch option chain data")
 
@@ -144,6 +127,7 @@ headers = {
 }
 
 def get_future_price(symbol="NIFTY"):
+    """Fetch NIFTY futures price"""
     try:
         if "NIFTY" in symbol.upper():
             url = "https://scanner.tradingview.com/symbol?symbol=NSEIX:NIFTY1!&fields=close&no_404=true"
@@ -156,19 +140,16 @@ def get_future_price(symbol="NIFTY"):
         return 0
 
 def get_next_tuesday():
-    """Get the next Tuesday expiry date, skipping holidays"""
+    """Get the next Tuesday expiry date"""
     ist = pytz.timezone('Asia/Kolkata')
     now = datetime.now(ist)
     today = now.date()
     
-    # Start from today and find next Tuesday
-    days_ahead = 1 - today.weekday()  # Tuesday is weekday 1
+    days_ahead = 1 - today.weekday()
     if days_ahead < 0 or (days_ahead == 0 and now.hour >= 16):
         days_ahead += 7
     
     next_tuesday_date = today + timedelta(days=days_ahead)
-    
-    # Convert to string format for API
     return next_tuesday_date.strftime('%d-%b-%Y').upper()
 
 def round_to_nearest_100(price):
@@ -205,7 +186,7 @@ def get_option_chain(symbol="NIFTY", expiry=None):
 
 def find_atm_strike_and_prices(df, reference_price):
     """
-    Find ATM strike based on reference price (could be spot or future)
+    Find ATM strike based on reference price (use future price)
     """
     valid_rows = []
     for _, row in df.iterrows():
@@ -215,7 +196,6 @@ def find_atm_strike_and_prices(df, reference_price):
     if not valid_rows:
         return None, 0, 0
     
-    # Use reference_price (future_price in sensibull mode)
     atm_strike = min(valid_rows, key=lambda x: abs(x['STRIKE'] - reference_price))['STRIKE']
     
     atm_row = None
@@ -232,20 +212,11 @@ def find_atm_strike_and_prices(df, reference_price):
     
     return atm_strike, atm_call_price, atm_put_price
 
-def should_use_call_iv(strike, reference_price, mode='sensibull'):
+def calculate_iv_for_dataframe(df, future_price, expiry_datetime):
     """
-    Determine whether to use Call IV or Put IV for a given strike
-    For SENSIBULL mode: use reference_price (future price)
+    Calculate IV using Black-76 model with futures price
     """
-    if mode == 'sensibull':
-        # For sensibull: use reference price (future price) as the cutoff
-        return strike >= reference_price
-    else:
-        # For other modes: use ATM strike (not implemented here)
-        return strike >= reference_price
-
-def calculate_iv_for_dataframe(df, spot_price, future_price, expiry_datetime):
-    # Use FUTURE price for ATM selection in SENSIBULL mode
+    # Use future price for ATM selection
     atm_strike, atm_call_price, atm_put_price = find_atm_strike_and_prices(df, future_price)
     
     if atm_strike is None:
@@ -263,46 +234,39 @@ def calculate_iv_for_dataframe(df, spot_price, future_price, expiry_datetime):
         call_price = float(row['CALL LTP']) if row['CALL LTP'] not in ['', None] else 0
         put_price = float(row['PUT LTP']) if row['PUT LTP'] not in ['', None] else 0
         
+        # Skip if both prices are zero
         if call_price <= 0 and put_price <= 0:
             iv_values.append('')
             continue
         
-        # Check for intrinsic value violations
-        call_intrinsic = max(0, future_price - strike)
-        put_intrinsic = max(0, strike - future_price)
-        
-        # If price is below intrinsic, use minimum price that makes sense
-        calc_call_price = max(call_price, call_intrinsic + 0.01, 0.01)
-        calc_put_price = max(put_price, put_intrinsic + 0.01, 0.01)
+        # Get valid prices
+        calc_call_price = max(call_price, 0.05) if call_price > 0 else None
+        calc_put_price = max(put_price, 0.05) if put_price > 0 else None
         
         try:
+            # Initialize calculator with Black-76 parameters
             calculator = CalcIvGreeks(
-                SpotPrice=spot_price,  # Keep spot for NSE mode compatibility
-                FuturePrice=future_price,
+                FuturePrice=future_price,  # Key: Use futures price
                 AtmStrike=atm_strike,
-                AtmStrikeCallPrice=atm_call_price if atm_call_price > 0 else 1.0,
-                AtmStrikePutPrice=atm_put_price if atm_put_price > 0 else 1.0,
+                AtmStrikeCallPrice=max(atm_call_price, 0.05) if atm_call_price > 0 else 0.05,
+                AtmStrikePutPrice=max(atm_put_price, 0.05) if atm_put_price > 0 else 0.05,
                 ExpiryDateTime=expiry_datetime,
+                tryMatchWith=TryMatchWith.CUSTOM  # Use CUSTOM for Black-76
+            )
+            
+            # Get IV and Greeks for this strike
+            # This uses the unified IV approach (OTM option's IV)
+            result = calculator.GetImpVolAndGreeks(
                 StrikePrice=strike,
                 StrikeCallPrice=calc_call_price,
                 StrikePutPrice=calc_put_price,
-                tryMatchWith=TryMatchWith.SENSIBULL
+                useOtmLiquidity=True  # Use OTM option's IV (more liquid)
             )
             
-            # Key change: Use future price comparison for SENSIBULL mode
-            use_call = should_use_call_iv(strike, future_price, mode='sensibull')
-            
-            if use_call:
-                iv = calculator.CallImplVol() * 100
-            else:
-                iv = calculator.PutImplVol() * 100
-            
-            if iv > 0:
-                iv_values.append(round(iv, 2))
-            else:
-                iv_values.append('')
+            iv_values.append(round(result['ImplVol'], 2))
                 
-        except Exception:
+        except Exception as e:
+            print(f"Error calculating IV for strike {strike}: {e}")
             iv_values.append('')
     
     return iv_values
@@ -356,14 +320,16 @@ def create_option_chain_dataframe(data, expiry_date):
     
     df = pd.DataFrame(option_data)
     
-    spot_price = underlying_value
+    # Get futures price
     future_price = get_future_price()
     
+    # Create expiry datetime
     expiry_datetime = datetime.strptime(expiry_date, '%d-%b-%Y')
     expiry_datetime = expiry_datetime.replace(hour=15, minute=30, second=0)
     expiry_datetime = pytz.timezone('Asia/Kolkata').localize(expiry_datetime)
     
-    iv_column = calculate_iv_for_dataframe(df, spot_price, future_price, expiry_datetime)
+    # Calculate IV using Black-76 (only futures price needed)
+    iv_column = calculate_iv_for_dataframe(df, future_price, expiry_datetime)
     
     df['IV'] = iv_column
     
