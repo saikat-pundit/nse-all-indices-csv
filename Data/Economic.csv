@@ -12,7 +12,7 @@ Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
 23 Dec,19:45,USA,Industrial Production YoY NOV,★,2.50%,,2.20%
 24 Dec,19:00,USA,Initial Jobless Claims DEC/20,★★,214K,223K,224K
 25 Dec,00:00,India,Market Holiday - Christmas,★,,,
-29 Dec,16:00,India,Industrial Production YoY NOV,★★,,,0.40%
+29 Dec,16:00,India,Industrial Production YoY NOV,★★,6.70%,2.50%,0.40%
 31 Dec,00:30,USA,FOMC Minutes,★★★,,,
 31 Dec,07:00,China,NBS Manufacturing PMI DEC,★★,,49.2,49.2
 31 Dec,19:00,USA,Initial Jobless Claims DEC/27,★★,,220K,214K
@@ -24,4 +24,4 @@ Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
 13 Jan,19:00,USA,Inflation Rate YoY DEC,★★,,,2.70%
 13 Jan,20:30,USA,New Home Sales OCT,★★,,,
 13 Jan,20:30,USA,New Home Sales SEP,★★,,0.71M,0.8M
-,,,,,,Update Time:,29-Dec 16:16
+,,,,,,Update Time:,29-Dec 16:20
