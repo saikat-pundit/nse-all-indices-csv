@@ -12,7 +12,7 @@ Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
 25 Dec,00:00,India,Market Holiday - Christmas,★,,,
 29 Dec,16:00,India,Industrial Production YoY NOV,★★,6.70%,2.50%,0.40%
 31 Dec,00:30,USA,FOMC Minutes,★★★,,,
-31 Dec,07:00,China,NBS Manufacturing PMI DEC,★★,,49.2,49.2
+31 Dec,07:00,China,NBS Manufacturing PMI DEC,★★,50.1,49.2,49.2
 31 Dec,19:00,USA,Initial Jobless Claims DEC/27,★★,,220K,214K
 08 Jan,19:00,USA,Initial Jobless Claims JAN/03,★★,,,
 09 Jan,19:00,USA,Housing Starts OCT,★★,,,
@@ -25,4 +25,4 @@ Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
 14 Jan,19:00,USA,Retail Sales YoY NOV,★★,,,4.00%
 14 Jan,20:30,USA,Existing Home Sales DEC,★★,,,4.13M
 15 Jan,19:00,USA,Retail Sales YoY DEC,★★,,,
-,,,,,,Update Time:,31-Dec 09:10
+,,,,,,Update Time:,31-Dec 09:20
