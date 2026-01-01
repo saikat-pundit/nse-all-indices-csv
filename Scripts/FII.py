@@ -151,18 +151,7 @@ def save_to_csv(data, filepath):
             # Skip empty rows
             if not any(cell.strip() for cell in row):
                 continue
-                
-            # Get currency unit from second row (index 1 in original data)
-            if i == 1 and len(row) > 0:
-                # Extract USD Mn or other currency info
-                if any(unit in cell for unit in ["USD", "INR", "Rs"] for cell in row):
-                    for cell in row:
-                        if any(unit in cell for unit in ["USD", "INR", "Rs"]):
-                            currency_unit = cell.strip()
-                            break
-                # Skip the currency unit row
-                continue
-                
+            
             # Skip the third row (empty or useless row)
             if i == 2:
                 continue
@@ -193,8 +182,8 @@ def save_to_csv(data, filepath):
         
         # Add timestamp row at the end in IST
         ist_time = datetime.utcnow() + timedelta(hours=5, minutes=30)
-        ist_time_str = ist_time.strftime("%d-%b %H:%M")  # Format: 01-Jan 19:30
-        filtered_data.append(["Update Time:", f"{ist_time_str} IST"])
+        ist_time_str = ist_time.strftime("%d-%b %H:%M")
+        filtered_data.append(["Update Time:", f"{ist_time_str}"])
         
         with open(filepath, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
