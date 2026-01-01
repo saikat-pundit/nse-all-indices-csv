@@ -133,20 +133,35 @@ def save_to_csv(data, filepath):
     try:
         # Extract only columns at index 1 and 86 (0-indexed)
         filtered_data = []
-        for row in data:
+        
+        # Process header row
+        if data and len(data) > 0:
+            # First row - use 5th column data (index 4), but only in first column
+            if len(data[0]) > 4:
+                # First column: 5th column data, Second column: empty
+                filtered_data.append([data[0][4], ""])
+            else:
+                filtered_data.append(["", ""])
+        
+        # Process data rows (skip header)
+        for i, row in enumerate(data[1:], 1):
+            # Skip empty rows
+            if not any(cell.strip() for cell in row):
+                continue
+                
             if len(row) > 86:  # Ensure row has at least 87 columns
                 # Keep only columns 1 and 86
                 filtered_row = [row[1], row[86]]
                 filtered_data.append(filtered_row)
-            elif len(row) > 1:  # For header row or rows with fewer columns
-                # For header row (index 0), show 5th column data (index 4)
-                if len(filtered_data) == 0 and len(row) > 5:
-                    filtered_row = [row[5], row[5]]  # Use 5th column for both positions
-                else:
-                    # For other rows, just take what's available
-                    filtered_row = [row[1] if len(row) > 1 else "", 
-                                   row[-1] if len(row) > 0 else ""]
+            elif len(row) > 1:
+                # For rows with fewer columns
+                filtered_row = [row[1] if len(row) > 1 else "", 
+                               row[-1] if len(row) > 0 else ""]
                 filtered_data.append(filtered_row)
+        
+        # Add timestamp row at the end in IST
+        ist_time = datetime.utcnow().strftime("%d-%b %H:%M")  # Format: 01-Jan 19:30
+        filtered_data.append(["Update Time:", f"{ist_time} IST"])
         
         with open(filepath, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
@@ -202,7 +217,7 @@ def main():
             logger.error("No data extracted from table")
             return False
         
-        logger.info(f"Extracted {len(table_data)} rows, showing columns 1 and 86 only")
+        logger.info(f"Extracted {len(table_data)} rows")
         
         # Save to CSV (replaces if exists)
         success = save_to_csv(table_data, csv_path)
