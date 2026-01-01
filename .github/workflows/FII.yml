@@ -24,7 +24,7 @@ jobs:
         
     - name: Install dependencies
       run: |
-        pip install -r Scripts/requirements.txt
+        pip install -r requirements.txt
         
     - name: Run FII data script
       run: |
