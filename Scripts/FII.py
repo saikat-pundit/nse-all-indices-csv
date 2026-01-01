@@ -140,8 +140,8 @@ def save_to_csv(data, filepath):
                 filtered_data.append(filtered_row)
             elif len(row) > 1:  # For header row or rows with fewer columns
                 # For header row (index 0), show 5th column data (index 4)
-                if len(filtered_data) == 0 and len(row) > 4:
-                    filtered_row = [row[4], row[4]]  # Use 5th column for both positions
+                if len(filtered_data) == 0 and len(row) > 5:
+                    filtered_row = [row[5], row[5]]  # Use 5th column for both positions
                 else:
                     # For other rows, just take what's available
                     filtered_row = [row[1] if len(row) > 1 else "", 
