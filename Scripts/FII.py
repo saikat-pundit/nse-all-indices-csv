@@ -6,111 +6,68 @@ from pathlib import Path
 import logging
 import calendar
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Set up logging - Reduce verbosity
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(message)s',
+    datefmt='%H:%M:%S'
+)
 logger = logging.getLogger(__name__)
 
-def get_target_date(attempt=0):
-    """Get target date for fetching data with fallback logic."""
+def get_primary_and_fallback_dates():
+    """Get primary and fallback dates for fetching data."""
     today = datetime.now()
     
     # Get 15th of current month
     current_month_15th = today.replace(day=15)
     
-    if attempt == 0:
-        # First attempt: Try the primary date
-        if today <= current_month_15th:
-            # On or before 15th of current month - fetch previous month's end
-            if today.month == 1:
-                target_month = 12
-                target_year = today.year - 1
-            else:
-                target_month = today.month - 1
-                target_year = today.year
-            
-            # Get last day of previous month
-            _, prev_last_day = calendar.monthrange(target_year, target_month)
-            selected_day = prev_last_day
-            logger.info(f"📅 Primary attempt: Today ({today.strftime('%d-%b')}) ≤ 15th → Trying PREVIOUS month's END: {selected_day}-{calendar.month_abbr[target_month]}-{target_year}")
+    if today <= current_month_15th:
+        # On or before 15th of current month
+        # Primary: previous month's end
+        if today.month == 1:
+            primary_month = 12
+            primary_year = today.year - 1
         else:
-            # After 15th of current month - fetch current month's 15th
-            target_month = today.month
-            target_year = today.year
-            selected_day = 15
-            logger.info(f"📅 Primary attempt: Today ({today.strftime('%d-%b')}) > 15th → Trying CURRENT month's 15th: {selected_day}-{calendar.month_abbr[target_month]}-{target_year}")
-    
-    elif attempt == 1:
-        # Second attempt: Try the other fortnight date
-        if today <= current_month_15th:
-            # If primary was month end, try 15th of previous month
-            if today.month == 1:
-                target_month = 12
-                target_year = today.year - 1
-            else:
-                target_month = today.month - 1
-                target_year = today.year
-            selected_day = 15
-            logger.info(f"📅 Fallback attempt {attempt}: Trying PREVIOUS month's 15th: {selected_day}-{calendar.month_abbr[target_month]}-{target_year}")
-        else:
-            # If primary was 15th of current month, try previous month's end
-            if today.month == 1:
-                target_month = 12
-                target_year = today.year - 1
-            else:
-                target_month = today.month - 1
-                target_year = today.year
-            _, prev_last_day = calendar.monthrange(target_year, target_month)
-            selected_day = prev_last_day
-            logger.info(f"📅 Fallback attempt {attempt}: Trying PREVIOUS month's END: {selected_day}-{calendar.month_abbr[target_month]}-{target_year}")
-    
+            primary_month = today.month - 1
+            primary_year = today.year
+        
+        _, primary_day = calendar.monthrange(primary_year, primary_month)
+        
+        # Fallback: 15th of previous month
+        fallback_month = primary_month
+        fallback_year = primary_year
+        fallback_day = 15
+        
     else:
-        # Third attempt: Try one month earlier from primary date
-        if today <= current_month_15th:
-            # Try 15th of month before previous
-            if today.month == 1:
-                target_month = 11
-                target_year = today.year - 1
-            elif today.month == 2:
-                target_month = 12
-                target_year = today.year - 1
-            else:
-                target_month = today.month - 2
-                target_year = today.year
-            selected_day = 15
-            logger.info(f"📅 Fallback attempt {attempt}: Trying 15th of month before previous: {selected_day}-{calendar.month_abbr[target_month]}-{target_year}")
+        # After 15th of current month
+        # Primary: 15th of current month
+        primary_month = today.month
+        primary_year = today.year
+        primary_day = 15
+        
+        # Fallback: previous month's end
+        if today.month == 1:
+            fallback_month = 12
+            fallback_year = today.year - 1
         else:
-            # Try end of month before previous
-            if today.month == 1:
-                target_month = 11
-                target_year = today.year - 1
-            elif today.month == 2:
-                target_month = 12
-                target_year = today.year - 1
-            else:
-                target_month = today.month - 2
-                target_year = today.year
-            _, month_end = calendar.monthrange(target_year, target_month)
-            selected_day = month_end
-            logger.info(f"📅 Fallback attempt {attempt}: Trying END of month before previous: {selected_day}-{calendar.month_abbr[target_month]}-{target_year}")
+            fallback_month = today.month - 1
+            fallback_year = today.year
+        
+        _, fallback_day = calendar.monthrange(fallback_year, fallback_month)
     
-    # Get month abbreviation (Jan, Feb, etc.)
-    month_abbr = calendar.month_abbr[target_month]
+    # Get month abbreviations
+    primary_month_abbr = calendar.month_abbr[primary_month]
+    fallback_month_abbr = calendar.month_abbr[fallback_month]
     
-    return month_abbr, selected_day, target_year
+    primary_date_str = f"{primary_day}-{primary_month_abbr}-{primary_year}"
+    fallback_date_str = f"{fallback_day}-{fallback_month_abbr}-{fallback_year}"
+    
+    primary_url = f"https://www.fpi.nsdl.co.in/web/StaticReports/Fortnightly_Sector_wise_FII_Investment_Data/FIIInvestSector_{primary_month_abbr}{primary_day}{primary_year}.html"
+    fallback_url = f"https://www.fpi.nsdl.co.in/web/StaticReports/Fortnightly_Sector_wise_FII_Investment_Data/FIIInvestSector_{fallback_month_abbr}{fallback_day}{fallback_year}.html"
+    
+    return primary_url, primary_date_str, fallback_url, fallback_date_str
 
-def generate_url(attempt=0):
-    """Generate dynamic URL with appropriate date and fallback logic."""
-    month_abbr, day, year = get_target_date(attempt)
-    url = f"https://www.fpi.nsdl.co.in/web/StaticReports/Fortnightly_Sector_wise_FII_Investment_Data/FIIInvestSector_{month_abbr}{day}{year}.html"
-    
-    if attempt == 0:
-        logger.info(f"🌐 Primary URL: {url}")
-    else:
-        logger.info(f"🌐 Fallback URL attempt {attempt}: {url}")
-    
-    return url, f"{day}-{month_abbr}-{year}"
-
-def fetch_with_retry(url, max_retries=3, delay=5):
+def fetch_url_with_retries(url, description, max_retries=3, delay=3):
     """Fetch URL with retry logic."""
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -118,74 +75,57 @@ def fetch_with_retry(url, max_retries=3, delay=5):
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"🔍 Attempt {attempt + 1}/{max_retries} to fetch data...")
+            logger.info(f"Attempt {attempt + 1}/{max_retries}: {description}")
             response = requests.get(url, headers=headers, timeout=30, verify=True)
             
             # Check for 400/404 errors
             if response.status_code in [400, 404]:
-                logger.warning(f"⚠️  URL not found (HTTP {response.status_code}): {url}")
-                return None
+                logger.info(f"URL not available (HTTP {response.status_code})")
+                time.sleep(delay)
+                continue
             
             response.raise_for_status()
             
-            # Check if page contains data or error message
-            if "404" in response.text or "Page Not Found" in response.text or len(response.text) < 1000:
-                logger.warning(f"⚠️  Page exists but may not contain valid data (length: {len(response.text)} chars)")
-                return None
+            # Check if page contains valid data
+            if len(response.text) < 5000 or "No Data" in response.text:
+                logger.info("Page exists but no valid data found")
+                time.sleep(delay)
+                continue
             
-            logger.info(f"✅ Successfully fetched {len(response.text)} characters")
+            logger.info(f"Successfully fetched {len(response.text):,} characters")
             return response.text
             
-        except requests.exceptions.HTTPError as e:
-            if response.status_code in [400, 404]:
-                logger.warning(f"⚠️  URL not found (HTTP {response.status_code}): {url}")
-                return None
-            else:
-                logger.warning(f"⚠️  Attempt {attempt + 1} failed: {e}")
-                if attempt < max_retries - 1:
-                    logger.info(f"⏳ Waiting {delay} seconds before retry...")
-                    time.sleep(delay)
-                    delay *= 2
-                else:
-                    logger.error(f"❌ All {max_retries} attempts failed for this URL")
-                    return None
         except requests.exceptions.RequestException as e:
-            logger.warning(f"⚠️  Attempt {attempt + 1} failed: {e}")
+            logger.info(f"Attempt failed: {e}")
             if attempt < max_retries - 1:
-                logger.info(f"⏳ Waiting {delay} seconds before retry...")
                 time.sleep(delay)
-                delay *= 2
-            else:
-                logger.error(f"❌ All {max_retries} attempts failed for this URL")
-                return None
     
     return None
 
-def try_multiple_dates():
-    """Try multiple date combinations to find available data."""
-    max_date_attempts = 3
-    html_content = None
-    successful_url = None
-    successful_date = None
+def try_fetch_data():
+    """Try to fetch data from primary and fallback URLs."""
+    # Get URLs
+    primary_url, primary_date, fallback_url, fallback_date = get_primary_and_fallback_dates()
     
-    for attempt in range(max_date_attempts):
-        url, date_str = generate_url(attempt)
-        logger.info(f"🔄 Trying date combination {attempt + 1}/{max_date_attempts}: {date_str}")
-        
-        html_content = fetch_with_retry(url, max_retries=2, delay=3)
-        
-        if html_content is not None:
-            successful_url = url
-            successful_date = date_str
-            logger.info(f"🎯 Found valid data for date: {date_str}")
-            break
-        else:
-            logger.warning(f"📭 No data found for date: {date_str}")
-            if attempt < max_date_attempts - 1:
-                logger.info(f"⏳ Trying next date combination in 2 seconds...")
-                time.sleep(2)
+    logger.info(f"Primary URL: {primary_date}")
+    logger.info(f"Fallback URL: {fallback_date}")
+    logger.info("-" * 50)
     
-    return html_content, successful_url, successful_date
+    # Try primary URL with retries
+    html_content = fetch_url_with_retries(primary_url, f"Trying primary URL", 3, 3)
+    
+    if html_content:
+        return html_content, primary_url, primary_date
+    
+    logger.info("Primary URL failed, trying fallback...")
+    
+    # Try fallback URL with retries
+    html_content = fetch_url_with_retries(fallback_url, f"Trying fallback URL", 3, 3)
+    
+    if html_content:
+        return html_content, fallback_url, fallback_date
+    
+    return None, None, None
 
 def extract_table_data(table_html):
     """Extract data from HTML table."""
@@ -345,9 +285,9 @@ def save_to_csv(data, filepath, url, date_str):
             
             row_count += 1
         
-        # Check if we have meaningful data (more than just header and timestamp rows)
-        if len(filtered_data) <= 2:  # Only header and timestamp rows
-            logger.warning("⚠️  No meaningful data found in HTML table")
+        # Check if we have meaningful data
+        if len(filtered_data) <= 2:
+            logger.info("No meaningful data found")
             return False, 0
         
         # Add data date info row
@@ -355,145 +295,113 @@ def save_to_csv(data, filepath, url, date_str):
         
         # Add timestamp row at the end in IST
         ist_time = datetime.utcnow() + timedelta(hours=5, minutes=30)
-        ist_time_str = ist_time.strftime("%d-%b %H:%M")  # Format: 01-Jan 19:30
+        ist_time_str = ist_time.strftime("%d-%b %H:%M")
         filtered_data.append(["Update Time:", f"{ist_time_str} IST"])
-        
-        # Add URL info row
-        filtered_data.append(["Data Source:", url])
         
         with open(filepath, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerows(filtered_data)
         
-        logger.info(f"💾 Data saved to {filepath} ({len(filtered_data)} rows)")
+        logger.info(f"Saved {len(filtered_data)} rows to CSV")
         return True, len(filtered_data)
     except Exception as e:
-        logger.error(f"❌ Failed to save CSV: {e}")
+        logger.info(f"Failed to save CSV: {e}")
         return False, 0
 
 def main():
     """Main function to fetch and process FII data."""
-    logger.info("=" * 60)
-    logger.info("📊 FII Data Fetcher - NSDL Fortnightly Sector-wise Investment")
-    logger.info("=" * 60)
+    logger.info("Starting FII Data Fetcher")
+    logger.info("=" * 50)
     
-    # Create Data directory if it doesn't exist
+    # Create Data directory
     script_dir = Path(__file__).parent
     data_dir = script_dir.parent / 'Data'
     data_dir.mkdir(exist_ok=True)
     csv_path = data_dir / 'FII.csv'
     
-    # Check if old FII.csv exists
+    # Check existing file
     existing_data = None
     existing_rows = 0
     if csv_path.exists():
-        logger.info(f"📂 Existing file found: {csv_path}")
         try:
-            # Read existing data to preserve it if new fetch fails
             with open(csv_path, 'r', encoding='utf-8') as f:
                 existing_data = f.read()
                 existing_rows = len(f.readlines())
-            logger.info(f"📊 Existing data has {existing_rows} rows")
-        except Exception as e:
-            logger.warning(f"⚠️  Could not read existing CSV: {e}")
+            logger.info(f"Existing file has {existing_rows} rows")
+        except:
+            pass
     
     try:
-        # Try multiple date combinations to find available data
-        logger.info("🔄 Trying multiple date combinations to find available data...")
-        html_content, successful_url, successful_date = try_multiple_dates()
+        # Try to fetch data
+        html_content, successful_url, successful_date = try_fetch_data()
         
         if not html_content:
-            logger.error("❌ Could not find data for any date combination")
-            if existing_data and csv_path.exists():
-                logger.info("🔄 Keeping existing data (no new data found)")
+            logger.info("Could not fetch data from any URL")
+            if existing_data:
                 with open(csv_path, 'w', encoding='utf-8') as f:
                     f.write(existing_data)
-                logger.info(f"✅ Kept existing data ({existing_rows} rows)")
-            else:
-                logger.warning("📭 No data available and no existing data to restore")
+                logger.info("Restored existing data")
             return False
         
-        logger.info(f"✅ Found data for date: {successful_date}")
-        
-        # Find the first table in HTML
+        # Extract table
         table_start = html_content.find('<table')
         if table_start == -1:
-            logger.error("❌ No table found in HTML")
-            if existing_data and csv_path.exists():
-                logger.info("🔄 Restoring original data (no table found)")
+            logger.info("No table found in HTML")
+            if existing_data:
                 with open(csv_path, 'w', encoding='utf-8') as f:
                     f.write(existing_data)
-                logger.info(f"✅ Original data restored ({existing_rows} rows)")
+                logger.info("Restored existing data")
             return False
         
         table_end = html_content.find('</table>', table_start)
         if table_end == -1:
-            logger.error("❌ Incomplete table in HTML")
-            if existing_data and csv_path.exists():
-                logger.info("🔄 Restoring original data (incomplete table)")
+            logger.info("Incomplete table")
+            if existing_data:
                 with open(csv_path, 'w', encoding='utf-8') as f:
                     f.write(existing_data)
-                logger.info(f"✅ Original data restored ({existing_rows} rows)")
+                logger.info("Restored existing data")
             return False
         
         table_html = html_content[table_start:table_end + 8]
         
-        # Extract data from the table
-        logger.info("🔍 Extracting data from HTML table...")
+        # Extract data
         table_data = extract_table_data(table_html)
         
         if not table_data:
-            logger.error("❌ No data extracted from table")
-            if existing_data and csv_path.exists():
-                logger.info("🔄 Restoring original data (no data extracted)")
+            logger.info("No data extracted")
+            if existing_data:
                 with open(csv_path, 'w', encoding='utf-8') as f:
                     f.write(existing_data)
-                logger.info(f"✅ Original data restored ({existing_rows} rows)")
+                logger.info("Restored existing data")
             return False
         
-        logger.info(f"📈 Extracted {len(table_data)} raw rows from HTML")
+        logger.info(f"Extracted {len(table_data)} rows from HTML")
         
         # Save to CSV
-        logger.info("💾 Saving data to CSV...")
         success, new_row_count = save_to_csv(table_data, csv_path, successful_url, successful_date)
         
         if success:
-            logger.info("=" * 60)
-            logger.info(f"✅ DATA FETCHED SUCCESSFULLY!")
-            logger.info(f"📅 Data Date: {successful_date}")
-            logger.info(f"📁 File: {csv_path}")
-            logger.info(f"📊 Total rows: {new_row_count}")
-            logger.info(f"🔄 Replaced: {existing_rows} old rows")
-            logger.info(f"🌐 Source: {successful_url}")
-            logger.info(f"🕐 Updated at: {(datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime('%d-%b %H:%M IST')}")
-            logger.info("=" * 60)
+            logger.info("=" * 50)
+            logger.info(f"SUCCESS: Data fetched for {successful_date}")
+            logger.info(f"Rows: {new_row_count}")
+            logger.info(f"Updated at: {(datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime('%d-%b %H:%M IST')}")
+            logger.info("=" * 50)
             return True
         else:
-            # If save fails, restore original data
-            if existing_data and csv_path.exists():
-                logger.info("🔄 Restoring original data due to save failure")
+            if existing_data:
                 with open(csv_path, 'w', encoding='utf-8') as f:
                     f.write(existing_data)
-                logger.info(f"✅ Original data restored ({existing_rows} rows)")
+                logger.info("Restored existing data")
             return False
             
     except Exception as e:
-        logger.error(f"❌ Error in execution: {e}")
-        import traceback
-        logger.error(traceback.format_exc())
-        # Restore original data on any exception
-        if existing_data and csv_path.exists():
-            logger.info("🔄 Restoring original data due to exception")
+        logger.info(f"Error: {e}")
+        if existing_data:
             with open(csv_path, 'w', encoding='utf-8') as f:
                 f.write(existing_data)
-            logger.info(f"✅ Original data restored ({existing_rows} rows)")
+            logger.info("Restored existing data")
         return False
 
 if __name__ == "__main__":
-    logger.info("🚀 Starting FII Data Fetcher...")
     success = main()
-    if success:
-        logger.info("✨ Script completed successfully!")
-    else:
-        logger.info("⚠️  Script completed with warnings/errors")
     exit(0 if success else 1)
