@@ -208,13 +208,6 @@ def main():
         success = save_to_csv(table_data, csv_path)
         
         if success:
-            # Log success message
-            logger.info("\n" + "=" * 60)
-            logger.info("✅ SUCCESS: FII data fetched and saved successfully!")
-            logger.info(f"📁 File: {csv_path}")
-            logger.info(f"📊 Rows: {len(table_data)}")
-            logger.info(f"🕐 Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            logger.info("=" * 60)
             return True
         else:
             return False
