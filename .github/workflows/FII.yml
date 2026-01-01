@@ -29,7 +29,7 @@ jobs:
     - name: Run FII data script
       run: |
         cd Scripts
-        python FII.py
+        python Scripts/FII.py
         
     - name: Check for changes
       id: git-check
