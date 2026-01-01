@@ -21,14 +21,24 @@ def fetch_bse_data():
             response = requests.get(url, headers=headers, timeout=10)
             if response.status_code == 200:
                 data = response.json()
-                # Handle RealTime data (cat 1 & 2)
+                
+                # Handle RealTime data
                 if "RealTime" in data:
-                    all_data.extend(data["RealTime"])
-                # Handle EOD data (cat 3)
-                elif "EOD" in data:
-                    # Convert EOD format to match RealTime format
+                    for item in data["RealTime"]:
+                        all_data.append({
+                            "IndexName": item.get("IndexName", "").strip(),
+                            "Curvalue": item.get("Curvalue", 0),
+                            "Chg": item.get("Chg", 0),
+                            "ChgPer": item.get("ChgPer", 0),
+                            "Prev_Close": item.get("Prev_Close", 0),
+                            "Week52High": item.get("Week52High", 0),
+                            "Week52Low": item.get("Week52Low", 0)
+                        })
+                
+                # Handle EOD data
+                if "EOD" in data:
                     for item in data["EOD"]:
-                        converted = {
+                        all_data.append({
                             "IndexName": item.get("IndicesWatchName", "").strip(),
                             "Curvalue": item.get("Curvalue", 0),
                             "Chg": item.get("CHNG", 0),
@@ -36,9 +46,10 @@ def fetch_bse_data():
                             "Prev_Close": item.get("PrevDayClose", 0),
                             "Week52High": "-",
                             "Week52Low": "-"
-                        }
-                        all_data.append(converted)
-        except:
+                        })
+                        
+        except Exception as e:
+            print(f"Error fetching {url}: {e}")
             continue
     
     return all_data
@@ -49,26 +60,34 @@ def transform_data(original_data):
     
     transformed = []
     for item in original_data:
-        # Handle missing values with defaults
         week52high = item.get("Week52High", "-")
         week52low = item.get("Week52Low", "-")
         
-        # Format week52 values
         if week52high != "-" and week52high != "":
-            week52high = f'{float(week52high):.2f}'
-        if week52low != "-" and week52low != "":
-            week52low = f'{float(week52low):.2f}'
+            try:
+                week52high = f'{float(week52high):.2f}'
+            except:
+                week52high = "-"
         
-        row = [
-            item.get("IndexName", "-"),
-            f'{float(item.get("Curvalue", 0)):.2f}',
-            f'{float(item.get("Chg", 0)):.2f}',
-            f'{float(item.get("ChgPer", 0)):.2f}',
-            f'{float(item.get("Prev_Close", 0)):.2f}',
-            week52high,
-            week52low
-        ]
-        transformed.append(row)
+        if week52low != "-" and week52low != "":
+            try:
+                week52low = f'{float(week52low):.2f}'
+            except:
+                week52low = "-"
+        
+        try:
+            row = [
+                item.get("IndexName", "-"),
+                f'{float(item.get("Curvalue", 0)):.2f}',
+                f'{float(item.get("Chg", 0)):.2f}',
+                f'{float(item.get("ChgPer", 0)):.2f}',
+                f'{float(item.get("Prev_Close", 0)):.2f}',
+                week52high,
+                week52low
+            ]
+            transformed.append(row)
+        except:
+            continue
     
     return transformed
 
@@ -82,12 +101,12 @@ def save_to_csv(data, filename="Data/BSE.csv"):
         writer.writerow(csv_headers)
         writer.writerows(data)
         
-        # IST timestamp
         timestamp = (datetime.now() + timedelta(hours=5, minutes=30)).strftime("%d-%b %H:%M")
         writer.writerow(["", "", "", "", "", "Update Time", timestamp])
 
 if __name__ == "__main__":
     raw_data = fetch_bse_data()
+    print(f"Total records fetched: {len(raw_data)}")
     processed_data = transform_data(raw_data)
     save_to_csv(processed_data)
     print(f"CSV saved with {len(processed_data)} records")
