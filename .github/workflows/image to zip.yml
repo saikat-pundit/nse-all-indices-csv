@@ -101,7 +101,7 @@ jobs:
         python gdrive_image_downloader.py -i urls.txt -o gdrive_images.zip -w 3
         
     - name: Upload zip artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: gdrive-images
         path: gdrive_images.zip
