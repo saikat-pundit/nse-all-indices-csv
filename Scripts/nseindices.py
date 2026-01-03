@@ -20,12 +20,8 @@ def format_value(value, key, index_name):
     except: return '-'
 
 headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept': 'application/json, text/plain, */*',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Referer': 'https://www.nseindia.com/',
-    'Origin': 'https://www.nseindia.com',
-    'Connection': 'keep-alive'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    'Accept': 'application/json'
 }
 
 index_dict = {}
@@ -39,26 +35,13 @@ for name, symbol in TV_SYMBOLS.items():
             '%': data.get('change'), 'Prev.': data.get('close[1]'), 'Adv:Dec': '-',
             'Yr Hi': data.get('price_52_week_high'), 'Yr Lo': data.get('price_52_week_low')
         }
-    except: 
-        print(f"Failed to fetch {name} from TradingView")
+    except: pass
 
-# NSE data
+# NSE data - FIXED: Direct request works!
 try:
-    print("Fetching NSE data...")
-    session = requests.Session()
-    session.headers.update(headers)
-    
-    # Get homepage first to get cookies
-    session.get("https://www.nseindia.com", timeout=5)
-    
-    # Now get the indices data
-    response = session.get("https://www.nseindia.com/api/allIndices", timeout=10)
-    print(f"NSE API Status: {response.status_code}")
-    
+    response = requests.get("https://www.nseindia.com/api/allIndices", headers=headers, timeout=10)
     if response.status_code == 200:
         nse_data = response.json()
-        print(f"Found {len(nse_data.get('data', []))} indices in NSE response")
-        
         for item in nse_data.get('data', []):
             name = item.get('index')
             if name not in target_indices or name in TV_SYMBOLS: continue
@@ -69,11 +52,7 @@ try:
                 '%': item.get('percentChange'), 'Prev.': item.get('previousClose'), 'Adv:Dec': adv_dec,
                 'Yr Hi': item.get('yearHigh'), 'Yr Lo': item.get('yearLow')
             }
-        print(f"Successfully processed {len([k for k in index_dict.keys() if k not in TV_SYMBOLS])} NSE indices")
-    else:
-        print(f"NSE API Error: {response.text[:200]}")
-except Exception as e:
-    print(f"NSE API Exception: {e}")
+except: pass
 
 # Prepare CSV
 records = []
