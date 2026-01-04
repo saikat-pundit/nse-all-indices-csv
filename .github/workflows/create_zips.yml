@@ -13,7 +13,7 @@ jobs:
         python-version: '3.10'
     
     - run: |
-        pip install pandas requests
+        pip install -r requirements.txt
         python download_zips.py
     
     - uses: actions/upload-artifact@v4
