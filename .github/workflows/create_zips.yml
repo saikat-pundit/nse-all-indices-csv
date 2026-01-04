@@ -9,57 +9,34 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup Python with cache
-      uses: actions/setup-python@v5
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.10'
         cache: 'pip'
-        cache-dependency-path: 'requirements.txt'
     
-    - name: Install dependencies
-      run: pip install -q -r requirements.txt
-    
-    - name: Create zip files
-      run: python download_zips.py 2>/dev/null || python download_zips.py
-    
-    - name: Get IST timestamp
-      id: timestamp
+    - name: Run process
       run: |
-        IST_TIME=$(TZ="Asia/Kolkata" date '+%d-%b-%Y %I:%M:%S %p IST')
-        echo "IST_TIME=${IST_TIME}" >> $GITHUB_OUTPUT
-        echo "SHORT_DATE=$(TZ="Asia/Kolkata" date '+%d-%b-%Y')" >> $GITHUB_OUTPUT
+        pip install -q pandas requests
+        python -W ignore download_zips.py
     
-    - name: Delete old 'latest' release
+    - name: Delete previous 'latest' release
       uses: dev-drprasad/delete-tag-and-release@v1.0
       with:
         delete_release: true
         tag_name: "latest"
+        github_token: ${{ github.token }}
       continue-on-error: true
     
     - name: Create new release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: "latest"
-        name: "Zip Files - ${{ steps.timestamp.outputs.SHORT_DATE }}"
+        name: "Zip Files"
         body: |
-          ## 📦 Static Download Links
-          
-          🔗 **[PRIMARY.zip](https://github.com/${{ github.repository }}/releases/latest/download/PRIMARY.zip)**  
-          🔗 **[Secondary_Higher_Secondary.zip](https://github.com/${{ github.repository }}/releases/latest/download/Secondary_Higher_Secondary.zip)**
-          
-          **Generated:** ${{ steps.timestamp.outputs.IST_TIME }}  
-          **Run:** ${{ github.run_number }}
-          
-          ### Direct URLs:
-          ```
           https://github.com/${{ github.repository }}/releases/latest/download/PRIMARY.zip
           https://github.com/${{ github.repository }}/releases/latest/download/Secondary_Higher_Secondary.zip
-          ```
+          
+          $(TZ="Asia/Kolkata" date '+%d-%b-%Y %H:%M IST')
         files: |
           PRIMARY.zip
           Secondary_Higher_Secondary.zip
-    
-    - name: Show summary
-      run: |
-        echo "✅ Done! Files ready at:"
-        echo "https://github.com/${{ github.repository }}/releases/latest"
