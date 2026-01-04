@@ -1,7 +1,7 @@
 import pandas as pd, requests, re, zipfile, os
 from io import StringIO
 
-# Download and parse CSV
+# Download CSV
 csv_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTBuDewVgTDoc_zaWYQyaWKpBt0RwtFPhnBrpqr1v6Y5wfAmPpEYvTsaWd64bsHhH68iYNtLMSRpOQ0/pub?gid=1630572077&single=true&output=csv"
 df = pd.read_csv(StringIO(requests.get(csv_url).text))
 
@@ -9,14 +9,13 @@ df = pd.read_csv(StringIO(requests.get(csv_url).text))
 primary = str(df.iloc[70, 9]) if pd.notna(df.iloc[70, 9]) else ""
 secondary = str(df.iloc[71, 9]) if pd.notna(df.iloc[71, 9]) else ""
 
-# Helper functions
 def get_info(url):
-    """Extract file ID and name from Google Drive URL"""
+    """Get file ID and name from Google Drive URL"""
     match = re.search(r'/d/([a-zA-Z0-9_-]+)', url)
     if not match: return None, None
     fid = match.group(1)
     
-    # Get filename from metadata
+    # Get filename
     try:
         html = requests.get(f"https://drive.google.com/file/d/{fid}/view").text
         name = re.search(r'"title":"([^"]+)"', html).group(1)
@@ -25,7 +24,7 @@ def get_info(url):
     return fid, name
 
 def save_zip(links_str, zip_name):
-    """Create zip file from semicolon-separated links"""
+    """Create zip file"""
     if not links_str: return False
     
     with zipfile.ZipFile(f"{zip_name}.zip", 'w') as z:
@@ -36,28 +35,27 @@ def save_zip(links_str, zip_name):
             if not fid: continue
             
             try:
-                # Download file
+                # Download
                 dl_url = f"https://drive.google.com/uc?export=download&id={fid}"
                 r = requests.get(dl_url, stream=True)
                 
-                # Handle large file warning
+                # Handle large files
                 if "confirm=" in r.url:
                     token = re.search(r'confirm=([0-9A-Za-z_]+)', r.url).group(1)
                     dl_url = f"{dl_url}&confirm={token}"
                     r = requests.get(dl_url, stream=True)
                 
-                # Save to zip
                 z.writestr(fname, r.content)
-                print(f"✓ Added: {fname}")
+                print(f"✓ {fname}")
             except:
-                print(f"✗ Failed: {fname}")
+                print(f"✗ {fname}")
                 continue
     
     return os.path.exists(f"{zip_name}.zip")
 
-# Create zip files
+# Create zips
 if primary and save_zip(primary, "PRIMARY"):
-    print("PRIMARY.zip created successfully")
+    print("✓ PRIMARY.zip")
 
 if secondary and save_zip(secondary, "Secondary_Higher_Secondary"):
-    print("Secondary_Higher_Secondary.zip created successfully")
+    print("✓ Secondary_Higher_Secondary.zip")
