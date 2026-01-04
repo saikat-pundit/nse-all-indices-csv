@@ -7,30 +7,18 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Python
-      uses: actions/setup-python@v5
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.10'
-
-    - name: Install dependencies
-      run: pip install pandas requests
-
-    - name: Create zip files
-      run: python download_zips.py
-
-    - name: Upload PRIMARY zip
-      uses: actions/upload-artifact@v4
-      if: exists('PRIMARY.zip')
+    
+    - run: |
+        pip install pandas requests
+        python download_zips.py
+    
+    - uses: actions/upload-artifact@v4
       with:
-        name: PRIMARY-files
-        path: PRIMARY.zip
-
-    - name: Upload Secondary zip
-      uses: actions/upload-artifact@v4
-      if: exists('Secondary_Higher_Secondary.zip')
-      with:
-        name: Secondary-Higher-Secondary-files
-        path: Secondary_Higher_Secondary.zip
+        name: zip-files
+        path: |
+          PRIMARY.zip
+          Secondary_Higher_Secondary.zip
