@@ -24,7 +24,7 @@ jobs:
       with:
         delete_release: true
         tag_name: "latest"
-        github_token: ${{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}}
+        github_token: ${{ github token }}
       continue-on-error: true
     
     - name: Create new release
