@@ -19,36 +19,24 @@ jobs:
         pip install -q pandas requests
         python -W ignore download_zips.py
     
-    - name: Get IST timestamp
-      id: timestamp
-      run: |
-        IST_TIME=$(TZ="Asia/Kolkata" date '+%d-%b-%Y %I:%M %p IST')
-        echo "IST_TIME=${IST_TIME}" >> $GITHUB_OUTPUT
-    
     - name: Delete previous 'latest' release
       uses: dev-drprasad/delete-tag-and-release@v1.0
       with:
         delete_release: true
         tag_name: "latest"
-        github_token: ${{ github.token }}
+        github_token: ${{ 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 }}
       continue-on-error: true
     
     - name: Create new release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: "latest"
-        name: "📦 Zip Files - ${{ steps.timestamp.outputs.IST_TIME }}"
+        name: "Zip Files"
         body: |
-          ## 🔗 Download Links
-          
-          **Primary:**  
           https://github.com/${{ github.repository }}/releases/latest/download/PRIMARY.zip
-          
-          **Secondary/Higher Secondary:**  
           https://github.com/${{ github.repository }}/releases/latest/download/Secondary_Higher_Secondary.zip
           
-          ---
-          *Updated: ${{ steps.timestamp.outputs.IST_TIME }}*
+          $(TZ="Asia/Kolkata" date '+%d-%b-%Y %H:%M IST')
         files: |
           PRIMARY.zip
           Secondary_Higher_Secondary.zip
