@@ -19,6 +19,12 @@ jobs:
         pip install -q pandas requests
         python -W ignore download_zips.py
     
+    - name: Get IST timestamp
+      id: timestamp
+      run: |
+        IST_DATE=$(TZ="Asia/Kolkata" date '+%d-%b-%Y %I:%M %p IST')
+        echo "IST_DATE=${IST_DATE}" >> $GITHUB_OUTPUT
+    
     - name: Delete previous 'latest' release
       uses: dev-drprasad/delete-tag-and-release@v1.0
       with:
@@ -31,12 +37,19 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: "latest"
-        name: "Zip Files"
+        name: "📦 Zip Files - ${{ steps.timestamp.outputs.IST_DATE }}"
         body: |
+          ## 📥 Download Links
+          
+          **Primary:**  
           https://github.com/${{ github.repository }}/releases/latest/download/PRIMARY.zip
+          
+          **Secondary/Higher Secondary:**  
           https://github.com/${{ github.repository }}/releases/latest/download/Secondary_Higher_Secondary.zip
           
-          $(TZ="Asia/Kolkata" date '+%d-%b-%Y %H:%M IST')
+          ---
+          *Generated: ${{ steps.timestamp.outputs.IST_DATE }}*  
+          *Run: ${{ github.run_number }}*
         files: |
           PRIMARY.zip
           Secondary_Higher_Secondary.zip
