@@ -19,12 +19,14 @@ jobs:
         pip install -q pandas requests
         python -W ignore download_zips.py
     
-    - name: Get IST timestamp
+    - name: Get IST timestamp with day
       id: get-time
       run: |
         IST_TIME=$(TZ="Asia/Kolkata" date '+%d-%b-%Y %H:%M IST')
+        DAY_OF_WEEK=$(TZ="Asia/Kolkata" date '+%A')
         echo "IST_TIME=$IST_TIME" >> $GITHUB_OUTPUT
-        echo "Timestamp captured: $IST_TIME"
+        echo "DAY_OF_WEEK=$DAY_OF_WEEK" >> $GITHUB_OUTPUT
+        echo "FULL_DATE=$DAY_OF_WEEK, $IST_TIME" >> $GITHUB_OUTPUT
     
     - name: Delete previous 'latest' release
       uses: dev-drprasad/delete-tag-and-release@v1.0
@@ -43,7 +45,7 @@ jobs:
           https://github.com/${{ github.repository }}/releases/latest/download/PRIMARY.zip
           https://github.com/${{ github.repository }}/releases/latest/download/Secondary_Higher_Secondary.zip
           
-          ${{ steps.get-time.outputs.IST_TIME }}
+          ${{ steps.get-time.outputs.FULL_DATE }}
         files: |
           PRIMARY.zip
           Secondary_Higher_Secondary.zip
