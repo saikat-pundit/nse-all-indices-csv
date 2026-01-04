@@ -1,50 +1,24 @@
 name: Create Zip Archives
 
-on:
-  workflow_dispatch:  # Manual trigger
-  schedule:
-    - cron: '0 0 * * 0'  # Weekly on Sunday at midnight
+on: [workflow_dispatch, push]
 
 jobs:
   create-zips:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    
-    - name: Setup Python
-      uses: actions/setup-python@v5
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.10'
     
-    - name: Install dependencies
-      run: pip install pandas requests
+    - run: |
+        pip install pandas requests
+        python download_zips.py
     
-    - name: Run script to create zip files
-      run: python download_zips.py
-    
-    - name: Upload PRIMARY.zip as artifact
-      uses: actions/upload-artifact@v4
-      if: exists('PRIMARY.zip')
+    - uses: actions/upload-artifact@v4
       with:
-        name: PRIMARY-documents
-        path: PRIMARY.zip
-        retention-days: 7
-    
-    - name: Upload Secondary.zip as artifact
-      uses: actions/upload-artifact@v4
-      if: exists('Secondary_Higher_Secondary.zip')
-      with:
-        name: Secondary-Higher-Secondary-documents
-        path: Secondary_Higher_Secondary.zip
-        retention-days: 7
-    
-    - name: Display file sizes
-      run: |
-        if [ -f "PRIMARY.zip" ]; then
-          echo "📦 PRIMARY.zip: $(du -h PRIMARY.zip | cut -f1)"
-        fi
-        if [ -f "Secondary_Higher_Secondary.zip" ]; then
-          echo "📦 Secondary_Higher_Secondary.zip: $(du -h Secondary_Higher_Secondary.zip | cut -f1)"
-        fi
+        name: zip-files
+        path: |
+          PRIMARY.zip
+          Secondary_Higher_Secondary.zip
