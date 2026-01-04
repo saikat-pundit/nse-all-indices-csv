@@ -8,13 +8,27 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
     - uses: actions/setup-python@v5
       with:
         python-version: '3.10'
+        cache: 'pip'  # Enable pip caching
     
-    - run: |
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
         pip install -r requirements.txt
-        python download_zips.py
+    
+    - name: Create zip files
+      run: python download_zips.py
     
     - uses: actions/upload-artifact@v4
       with:
