@@ -1,6 +1,11 @@
 name: Create Zip Archives
 
-on: [workflow_dispatch, push]
+on:
+  workflow_dispatch:  # Manual trigger
+  push:               # Trigger on code push
+  schedule:
+    # Runs every 3 hours
+    - cron: '0 */3 * * *'
 
 jobs:
   create-zips:
