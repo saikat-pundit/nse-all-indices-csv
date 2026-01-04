@@ -29,6 +29,8 @@ jobs:
     
     - name: Create new release
       uses: softprops/action-gh-release@v1
+      env:
+        IST_TIME: $(TZ="Asia/Kolkata" date '+%d-%b-%Y %H:%M IST')
       with:
         tag_name: "latest"
         name: "Zip Files"
@@ -36,7 +38,7 @@ jobs:
           https://github.com/${{ github.repository }}/releases/latest/download/PRIMARY.zip
           https://github.com/${{ github.repository }}/releases/latest/download/Secondary_Higher_Secondary.zip
           
-          $(TZ="Asia/Kolkata" date '+%d-%b-%Y %H:%M IST')
+          ${{ env.IST_TIME }}
         files: |
           PRIMARY.zip
           Secondary_Higher_Secondary.zip
