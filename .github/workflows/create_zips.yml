@@ -30,20 +30,39 @@ jobs:
     - name: Create zip files
       run: python download_zips.py
     
+    - name: Get IST timestamp
+      id: timestamp
+      run: |
+        IST_TIME=$(TZ="Asia/Kolkata" date '+%d-%b-%Y %I:%M:%S %p IST')
+        echo "IST_TIME=${IST_TIME}" >> $GITHUB_OUTPUT
+        echo "IST_DATE=${IST_TIME}" >> $GITHUB_OUTPUT
+    
     - name: Create GitHub Release with static links
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: "zip-files-${{ github.run_number }}"
-        name: "Zip Files v${{ github.run_number }}"
+        tag_name: "latest"
+        name: "Zip Files - ${{ steps.timestamp.outputs.IST_DATE }}"
         body: |
-          ## Static Download Links
+          ## 📦 Static Download Links
           
           These links always point to the latest files:
           
-          - [PRIMARY.zip](https://github.com/${{ github.repository }}/releases/latest/download/PRIMARY.zip)
-          - [Secondary_Higher_Secondary.zip](https://github.com/${{ github.repository }}/releases/latest/download/Secondary_Higher_Secondary.zip)
+          🔗 **[PRIMARY.zip](https://github.com/${{ github.repository }}/releases/latest/download/PRIMARY.zip)**  
+          🔗 **[Secondary_Higher_Secondary.zip](https://github.com/${{ github.repository }}/releases/latest/download/Secondary_Higher_Secondary.zip)**
           
-          *Generated on: $(date)*
+          ---
+          
+          **Generated on:** ${{ steps.timestamp.outputs.IST_TIME }}  
+          **Run ID:** ${{ github.run_number }}  
+          **Commit:** ${{ github.sha }}
+          
+          ---
+          
+          ### 📁 Direct Download URLs (copy-paste):
+          ```
+          https://github.com/${{ github.repository }}/releases/latest/download/PRIMARY.zip
+          https://github.com/${{ github.repository }}/releases/latest/download/Secondary_Higher_Secondary.zip
+          ```
         files: |
           PRIMARY.zip
           Secondary_Higher_Secondary.zip
@@ -55,8 +74,10 @@ jobs:
       run: |
         echo " "
         echo "=========================================="
-        echo "🔗 PERMANENT STATIC DOWNLOAD LINKS"
+        echo "🔗 PERMANENT STATIC DOWNLOAD LINKS (IST)"
         echo "=========================================="
+        echo " "
+        echo "📅 Generated: ${{ steps.timestamp.outputs.IST_TIME }}"
         echo " "
         echo "📥 PRIMARY.zip (always latest):"
         echo "https://github.com/${{ github.repository }}/releases/latest/download/PRIMARY.zip"
@@ -64,6 +85,6 @@ jobs:
         echo "📥 Secondary_Higher_Secondary.zip (always latest):"
         echo "https://github.com/${{ github.repository }}/releases/latest/download/Secondary_Higher_Secondary.zip"
         echo " "
-        echo "📁 All releases:"
+        echo "📁 Releases page:"
         echo "https://github.com/${{ github.repository }}/releases"
         echo "=========================================="
