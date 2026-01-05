@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 """
-ECI Data to CSV Converter
-Extracts data from ECI API and saves to CSV format
+ECI Data to CSV Converter with better error handling
 """
 
 import requests
 import json
 import csv
 import os
+import time
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 
-def get_eci_data():
-    """Fetch data from ECI API"""
+def get_eci_data_with_retry(max_retries=3, retry_delay=5):
+    """Fetch data from ECI API with retry logic"""
     
-    # API URL and parameters
     url = "https://gateway-officials.eci.gov.in/api/v1/noticeMapping/getRecords"
     
     params = {
@@ -29,14 +28,13 @@ def get_eci_data():
         "partList": "210,10,166,212,9,161,7,122,164,88,89,208,8,165,121,119,86,211,209,163,206,207,214,123,160,213,167,87,215,216,217,162,168,120"
     }
     
-    # Headers for authentication
     headers = {
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0",
         "Accept": "application/json",
         "Accept-Language": "en-US,en;q=0.5",
         "applicationName": "ERONET2.0",
         "PLATFORM-TYPE": "ECIWEB",
-        "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJDczJZLThBb3c2bEU4NW5xMnJuRE94bVpWTkRxYmpHUE5wLVNGdzQ3RjdzIn0.eyJleHAiOjE3Njc2NjgwNDAsImlhdCI6MTc2NzYyNDg0MCwianRpIjoiMjA0YTk2YWUtMGVhYi00OTFhLTk0NWUtYjA1ZmM3NDM1ZDE0IiwiaXNzIjoiaHR0cDovLzEwLjIxMC4xMTMuMjE6ODA4MC9yZWFsbXMvZWNpLXByb2QtcmVhbG0iLCJhdWQiOlsicmVhbG0tbWFuYWdlbWVudCIsImFjY291bnQiXSwic3ViIjoiNjNlYTk3YTAtOWY2MS00OTEyLTliZmYtZTA3MjAzNjk4MWIwIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiYXV0aG4tY2xpZW50Iiwic2Vzc2lvbl9zdGF0ZSI6IjcyZTg4ZDg5LTcwN2UtNGIyZC05ZWRkLWE3OWVhODdkNzc3OSIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwiYWVybyIsImRlZmF1bHQtcm9sZXMtZWNpLXByb2QtcmVhbG0iXX0sInJlc291cmNlX2FjY2VzcyI6eyJyZWFsbS1tYW5hZ2VtZW50Ijp7InJvbGVzIjpbImltcGVyc29uYXRpb24iXX0sImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsInNpZCI6IjcyZTg4ZDg5LTcwN2UtNGIyZC05ZWRkLWE3OWVhODdkNzc3OSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiYXV0aG9yaXplZFN0YXRlcyI6WyJTMjUiXSwicm9sZUlkIjo5LCJhdXRob3JpemVkRGlzdHJpY3RzIjpbIlMyNTIwIl0sImVtYWlsSWQiOiJrYXVzaWtpY2hhdHRlcmplZUBnbWFpbC5jb20iLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJhNzE3ODJlNS0wYzlmLTQyMTYtYWI4Yy02ZjEwOWFjYjg5NjUiLCJhdXRob3JpemVkQWNzIjpbMjYwXSwiZ2l2ZW5fbmFtZSI6IkFybmFiIiwibG9naW5OYW1lIjoiQUVST1MyNUEyNjBOMiIsIm5hbWUiOiJBcm5hYiBDaGF0dGVyamVlIiwicGhvbmVfbnVtYmVyIjoiNzcxOTM3MTgxNCIsImZhbWlseV9uYW1lIjoiQ2hhdHRlcmplZSIsImF1dGhvcml6ZWRQYXJ0cyI6WzIxMCwxMCwxNjYsMjEyLDksMTYxLDcsMTIyLDE2NCw4OCw4OSwyMDgsOCwxNjUsMTIxLDExOSw4NiwyMTEsMjA5LDE2MywyMDYsMjA3LDIxNCwxMjMsMTYwLDIxMywxNjcsODcsMjE1LDIxNixlDIxNywxNjIsMTY4LDEyMF19.KJNfZ7rSmU6tAe9OJDPxu43Q9U7lfbAKe_vVNa9VNDuBaPUILJPMkPHe2qyYwT1yibIwEe6F5iZ54DLf8TMYjPW42tH_UzFN-IhI10BMUoI6U8iHHoFBbiSTetiyjNq-SDJGp-shrdT71nk7mt3npkJFxsEz7qUrZ1VSv6UznT20olTvotVkVGHESik3BfGHXQx0BpY1cEr58YuC5cFQ5WhuRzK8Q5jyHTGOY3id67Q_fJGak13epPsOwyePGG4cKCl7mpnRkIA5Bpa-TeKeWCVZN6p9ichqLi7fJnkrPerj3ctry8nNkNENgAYhBEqhk9OBXM8HF7WXxpYpaHvVRQ",
+        "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJDczJZLThBb3c2bEU4NW5xMnJuRE94bVpWTkRxYmpHUE5wLVNGdzQ3RjdzIn0.eyJleHAiOjE3Njc2NjgwNDAsImlhdCI6MTc2NzYyNDg0MCwianRpIjoiMjA0YTk2YWUtMGVhYi00OTFhLTk0NWUtYjA1ZmM3NDM1ZDE0IiwiaXNzIjoiaHR0cDovLzEwLjIxMC4xMTMuMjE6ODA4MC9yZWFsbXMvZWNpLXByb2QtcmVhbG0iLCJhdWQiOlsicmVhbG0tbWFuYWdlbWVudCIsImFjY291bnQiXSwic3ViIjoiNjNlYTk3YTAtOWY2MS00OTEyLTliZmYtZTA3MjAzNjk4MWIwIiwidHlwIdoiQmVhcmVyIiwiYXpwIjoiYXV0aG4tY2xpZW50Iiwic2Vzc2lvbl9zdGF0ZSI6IjcyZTg4ZDg5LTcwN2UtNGIyZC05ZWRkLWE3OWVhODdkNzc3OSIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwiYWVybyIsImRlZmF1bHQtcm9sZXMtZWNpLXByb2QtcmVhbG0iXX0sInJlc291cmNlX2FjY2VzcyI6eyJyZWFsbS1tYW5hZ2VtZW50Ijp7InJvbGVzIjpbImltcGVyc29uYXRpb24iXX0sImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsInNpZCI6IjcyZTg4ZDg5LTcwN2UtNGIyZC05ZWRkLWE3OWVhODdkNzc3OSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiYXV0aG9yaXplZFN0YXRlcyI6WyJTMjUiXSwicm9sZUlkIjo5LCJhdXRob3JpemVkRGlzdHJpY3RzIjpbIlMyNTIwIl0sImVtYWlsSWQiOiJrYXVzaWtpY2hhdHRlcmplZUBnbWFpbC5jb20iLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJhNzE3ODJlNS0wYzlmLTQyMTYtYWI4Yy02ZjEwOWFjYjg5NjUiLCJhdXRob3JpemVkQWNzIjpbMjYwXSwiZ2l2ZW5fbmFtZSI6IkFybmFiIiwibG9naW5OYW1lIjoiQUVST1MyNUEyNjBOMiIsIm5hbWUiOiJBcm5hYiBDaGF0dGVyamVlIiwicGhvbmVfbnVtYmVyIjoiNzcxOTM3MTgxNCIsImZhbWlseV9uYW1lIjoiQ2hhdHRlcmplZSIsImF1dGhvcml6ZWRQYXJ0cyI6WzIxMCwxMCwxNjYsMjEyLDksMTYxLDcsMTIyLDE2NCw4OCw4OSwyMDgsOCwxNjUsMTIxLDExOSw4NiwyMTEsMjA5LDE2MywyMDYsMjA3LDIxNCwxMjMsMTYwLDIxMywxNjcsODcsMjE1LDIxNiwyMTcsMTYyLDE2OCwxMjBdfQ.KJNfZ7rSmU6tAe9OJDPxu43Q9U7lfbAKe_vVNa9VNDuBaPUILJPMkPHe2qyYwT1yibIwEe6F5iZ54DLf8TMYjPW42tH_UzFN-IhI10BMUoI6U8iHHoFBbiSTetiyjNq-SDJGp-shrdT71nk7mt3npkJFxsEz7qUrZ1VSv6UznT20olTvotVkVGHESik3BfGHXQx0BpY1cEr58YuC5cFQ5WhuRzK8Q5jyHTGOY3id67Q_fJGak13epPsOwyePGG4cKCl7mpnRkIA5Bpa-TeKeWCVZN6p9ichqLi7fJnkrPerj3ctry8nNkNENgAYhBEqhk9OBXM8HF7WXxpYpaHvVRQ",
         "currentRole": "aero",
         "state": "S25",
         "appName": "ERONET2.0",
@@ -51,30 +49,48 @@ def get_eci_data():
         "Priority": "u=0"
     }
     
-    try:
-        print(f"Fetching data from ECI API...")
-        print(f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    # Try with retries
+    for attempt in range(max_retries):
+        try:
+            print(f"Attempt {attempt + 1}/{max_retries} to fetch data...")
+            print(f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            
+            # Use longer timeout for GitHub Actions
+            response = requests.get(
+                url, 
+                params=params, 
+                headers=headers, 
+                timeout=(15, 30)  # (connect timeout, read timeout)
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"✅ API call successful on attempt {attempt + 1}")
+                
+                if 'X-RateLimit-Remaining' in response.headers:
+                    remaining = response.headers['X-RateLimit-Remaining']
+                    print(f"Rate limit remaining: {remaining}")
+                
+                return data
+            else:
+                print(f"❌ API error {response.status_code} on attempt {attempt + 1}")
+                print(f"Response: {response.text[:200]}")
+                
+        except requests.exceptions.Timeout:
+            print(f"⚠️ Timeout on attempt {attempt + 1}")
+        except requests.exceptions.ConnectionError:
+            print(f"⚠️ Connection error on attempt {attempt + 1}")
+        except Exception as e:
+            print(f"⚠️ Error on attempt {attempt + 1}: {e}")
         
-        response = requests.get(url, params=params, headers=headers, timeout=30)
-        
-        if response.status_code == 200:
-            data = response.json()
-            print(f"✅ API call successful")
-            
-            # Check rate limiting
-            if 'X-RateLimit-Remaining' in response.headers:
-                remaining = response.headers['X-RateLimit-Remaining']
-                print(f"Rate limit remaining: {remaining}")
-            
-            return data
-        else:
-            print(f"❌ API error: {response.status_code}")
-            print(f"Response: {response.text[:200]}")
-            return None
-            
-    except Exception as e:
-        print(f"❌ Request failed: {e}")
-        return None
+        # Wait before retry (except on last attempt)
+        if attempt < max_retries - 1:
+            print(f"Waiting {retry_delay} seconds before retry...")
+            time.sleep(retry_delay)
+            retry_delay *= 2  # Exponential backoff
+    
+    print("❌ All retry attempts failed")
+    return None
 
 def extract_elector_data(api_data: Dict) -> List[Dict]:
     """Extract elector details from API response"""
@@ -106,7 +122,6 @@ def save_to_csv(data: List[Dict], filename: str):
         return False
     
     try:
-        # Get all fieldnames from the first record
         fieldnames = list(data[0].keys())
         
         with open(filename, 'w', newline='', encoding='utf-8-sig') as f:
@@ -115,14 +130,7 @@ def save_to_csv(data: List[Dict], filename: str):
             writer.writerows(data)
         
         print(f"✅ Saved {len(data)} records to {filename}")
-        
-        # Print column information
-        print(f"CSV columns ({len(fieldnames)}):")
-        for i, col in enumerate(fieldnames[:10], 1):
-            print(f"  {i:2}. {col}")
-        if len(fieldnames) > 10:
-            print(f"  ... and {len(fieldnames) - 10} more columns")
-        
+        print(f"Columns: {len(fieldnames)}")
         return True
         
     except Exception as e:
@@ -140,12 +148,50 @@ def save_to_json(data: Dict, filename: str):
         print(f"❌ Error saving JSON: {e}")
         return False
 
+def create_sample_data():
+    """Create sample data for testing when API fails"""
+    print("⚠️ Creating sample data for testing...")
+    
+    sample_data = {
+        "status": None,
+        "statusCode": 200,
+        "refId": None,
+        "message": "Data fetched successfully",
+        "payload": {
+            "electorDetailDto": [
+                {
+                    "id": 7419866,
+                    "epicId": 33419796,
+                    "epicNo": "UWX2212983",
+                    "acNo": 260,
+                    "partNo": 216,
+                    "partSerialNo": 279,
+                    "electorName": "Bishnu Biswas",
+                    "electorNameVer": "বিষ্ণু বিশ্বাস",
+                    "electorMobileNo": "9883960193",
+                    "electorEfMobile": "8768528801",
+                    "category": "progeny",
+                    "userId": "a71782e5-0c9f-4216-ab8c-6f109acb8965",
+                    "loginName": "AEROS25A260N2",
+                    "address": "District Magistrate and District Collectorate Office",
+                    "fullName": "Arnab Chatterjee",
+                    "progLimitExceed": False,
+                    "parentNameMismatch": True,
+                    "extraInfo": "0050",
+                    "createdOn": "2026-01-02T21:53:08",
+                    "createdBy": "BACKEND"
+                }
+            ]
+        }
+    }
+    
+    print("✅ Sample data created")
+    return sample_data
+
 def main():
     """Main function to extract and save data"""
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    
-    # Create output directory
     output_dir = "eci_data"
     os.makedirs(output_dir, exist_ok=True)
     
@@ -153,12 +199,21 @@ def main():
     print("ECI Data Extraction Started")
     print("=" * 60)
     
-    # Step 1: Get data from API
-    api_data = get_eci_data()
+    # Step 1: Try to get real data with retries
+    api_data = get_eci_data_with_retry(max_retries=3, retry_delay=5)
     
+    use_sample_data = False
     if not api_data:
-        print("❌ Failed to get data from API")
-        return
+        print("⚠️ Failed to get real data from API")
+        
+        # Check if we should use sample data
+        if os.getenv('USE_SAMPLE_DATA', 'false').lower() == 'true':
+            print("Using sample data as configured...")
+            api_data = create_sample_data()
+            use_sample_data = True
+        else:
+            print("❌ Extraction failed. No data to save.")
+            return
     
     # Step 2: Save raw JSON
     json_file = os.path.join(output_dir, f"eci_raw_{timestamp}.json")
@@ -182,15 +237,10 @@ def main():
             f.write(f"ECI Data Extraction Summary\n")
             f.write(f"===========================\n")
             f.write(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"Source: {'SAMPLE DATA' if use_sample_data else 'REAL API'}\n")
             f.write(f"Total Records: {len(elector_data)}\n")
             f.write(f"CSV File: {csv_file if csv_success else 'Failed'}\n")
             f.write(f"JSON File: {json_file}\n")
-            f.write(f"\nFirst 3 records:\n")
-            for i, record in enumerate(elector_data[:3], 1):
-                f.write(f"\nRecord {i}:\n")
-                f.write(f"  EPIC No: {record.get('epicNo', 'N/A')}\n")
-                f.write(f"  Name: {record.get('electorName', 'N/A')}\n")
-                f.write(f"  Mobile: {record.get('electorMobileNo', 'N/A')}\n")
         
         print(f"✅ Summary saved to {summary_file}")
     except Exception as e:
@@ -202,6 +252,8 @@ def main():
     print(f"📊 Records extracted: {len(elector_data)}")
     print(f"💾 CSV saved: {csv_file}")
     print(f"📄 JSON saved: {json_file}")
+    if use_sample_data:
+        print(f"⚠️ Note: Using sample data (API failed)")
     print("=" * 60)
 
 if __name__ == "__main__":
