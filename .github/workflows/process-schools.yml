@@ -1,0 +1,52 @@
+name: Process School Documents
+
+on:
+  workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+
+jobs:
+  process-schools:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: pip install -q pandas requests
+    
+    - name: Run school document processor
+      run: python process_school_docs.py
+    
+    - name: Get IST timestamp
+      id: get-time
+      run: |
+        IST_TIME=$(TZ="Asia/Kolkata" date '+%d-%b-%Y %H:%M IST')
+        echo "IST_TIME=$IST_TIME" >> $GITHUB_OUTPUT
+    
+    - name: Delete previous 'latest' release
+      uses: dev-drprasad/delete-tag-and-release@v1.0
+      with:
+        delete_release: true
+        tag_name: "school_docs_latest"
+        github_token: ${{ github.token }}
+      continue-on-error: true
+    
+    - name: Upload zip files as release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: "school_docs_latest"
+        name: "School Documents"
+        body: |
+          School document zip files generated automatically.
+          
+          Generated: ${{ steps.get-time.outputs.IST_TIME }}
+          
+          Each zip contains PDFs with their original Google Drive filenames.
+        files: |
+          *.zip
