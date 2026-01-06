@@ -43,9 +43,7 @@ jobs:
         tag_name: "zip_files_latest"  # Consistent tag name
         name: "Student Week Files"
         body: |
-          Direct download links:
-          - https://github.com/${{ github.repository }}/releases/latest/download/PRIMARY.zip
-          - https://github.com/${{ github.repository }}/releases/latest/download/Secondary_Higher_Secondary.zip
+         
           
           Generated: ${{ steps.get-time.outputs.IST_TIME }}
           
