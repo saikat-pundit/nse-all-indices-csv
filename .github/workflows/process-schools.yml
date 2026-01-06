@@ -1,4 +1,4 @@
-name: Process School Documents
+name: Taruner Swapno Documents
 
 on:
   workflow_dispatch:  # Manual trigger
