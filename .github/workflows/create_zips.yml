@@ -1,4 +1,4 @@
-name: Create Zip Archives
+name: Students' Week Image Process
 
 on:
   workflow_dispatch:  # Manual trigger
