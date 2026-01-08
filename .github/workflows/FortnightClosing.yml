@@ -28,7 +28,7 @@ jobs:
         CURRENT_DATE=$(date +'%d-%m-%Y')
         
         # Check if today is 1st or 16th of the month
-        if [[ "$CURRENT_DAY" != "08" ]] && [[ "$CURRENT_DAY" != "16" ]]; then
+        if [[ "$CURRENT_DAY" != "01" ]] && [[ "$CURRENT_DAY" != "16" ]]; then
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "❌ Today is $CURRENT_DATE - not the 1st or 16th of the month"
             echo "❌ Manual trigger is only allowed on 1st and 16th of each month"
