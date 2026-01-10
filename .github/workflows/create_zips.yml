@@ -2,9 +2,6 @@ name: Students' Week Image Process
 
 on:
   workflow_dispatch:  # Manual trigger
-  schedule:
-    - cron: '0 */3 * * *'  # Runs every 3 hours
-
 jobs:
   create-zips:
     runs-on: ubuntu-latest
