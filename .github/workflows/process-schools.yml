@@ -2,6 +2,8 @@ name: Taruner Swapno Documents
 
 on:
   workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: '0 */3 * * *'  # Runs every 3 hours
 
 jobs:
   process-schools:
