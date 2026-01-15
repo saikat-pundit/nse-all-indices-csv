@@ -15,7 +15,7 @@ Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
 14 Jan,19:00,USA,Retail Sales YoY NOV,★★,3.30%,,3.30%
 14 Jan,20:30,USA,Existing Home Sales DEC,★★,4.35M,4.21M,4.14M
 15 Jan,00:00,India,Market Holiday - Municipal Corporation Election in Maharashtra,★,,,
-15 Jan,19:00,USA,Initial Jobless Claims JAN/10,★★,,219K,208K
+15 Jan,19:00,USA,Initial Jobless Claims JAN/10,★★,198K,219K,208K
 16 Jan,19:45,USA,Industrial Production YoY DEC,★,,,2.50%
 19 Jan,07:30,China,GDP Growth Rate YoY Q4,★★,,,4.80%
 19 Jan,07:30,China,Industrial Production YoY DEC,★★,,,4.80%
@@ -28,4 +28,4 @@ Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
 28 Jan,16:00,India,Industrial Production YoY DEC,★★,,,6.70%
 29 Jan,00:30,USA,Fed Interest Rate Decision,★★★,,,3.75%
 29 Jan,19:00,USA,Initial Jobless Claims JAN/24,★★,,,
-,,,,,,Update Time:,15-Jan 19:22
+,,,,,,Update Time:,15-Jan 19:30
