@@ -1,7 +1,4 @@
 Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
-31 Dec,00:30,USA,FOMC Minutes,★★★,,,
-31 Dec,07:00,China,NBS Manufacturing PMI DEC,★★,50.1,49.2,49.2
-31 Dec,19:00,USA,Initial Jobless Claims DEC/27,★★,199K,220K,215K 
 08 Jan,19:00,USA,Initial Jobless Claims JAN/03,★★,208K,210K,200K
 09 Jan,19:00,USA,Housing Starts OCT,★★,"1.246M
 ",,	1.306M
@@ -28,4 +25,5 @@ Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
 28 Jan,16:00,India,Industrial Production YoY DEC,★★,,,6.70%
 29 Jan,00:30,USA,Fed Interest Rate Decision,★★★,,,3.75%
 29 Jan,19:00,USA,Initial Jobless Claims JAN/24,★★,,,
-,,,,,,Update Time:,16-Jan 05:20
+31 Jan,07:00,China,NBS Manufacturing PMI JAN,★★,,,50.1
+,,,,,,Update Time:,16-Jan 06:00
