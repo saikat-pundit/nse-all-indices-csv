@@ -14,9 +14,9 @@ Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
 15 Jan,00:00,India,Market Holiday - Municipal Corporation Election in Maharashtra,★,,,
 15 Jan,19:00,USA,Initial Jobless Claims JAN/10,★★,198K,215K,207K
 16 Jan,19:45,USA,Industrial Production YoY DEC,★,2%,,2.70%
-19 Jan,07:30,China,GDP Growth Rate YoY Q4,★★,,4.40%,4.80%
-19 Jan,07:30,China,Industrial Production YoY DEC,★★,,5.00%,4.80%
-19 Jan,07:30,China,Retail Sales YoY DEC,★★,,1.20%,1.30%
+19 Jan,07:30,China,GDP Growth Rate YoY Q4,★★,4.50%,4.40%,4.80%
+19 Jan,07:30,China,Industrial Production YoY DEC,★★,5.20%,5.00%,4.80%
+19 Jan,07:30,China,Retail Sales YoY DEC,★★,0.90%,1.20%,1.30%
 22 Jan,19:00,USA,Initial Jobless Claims JAN/17,★★,,205K,198K
 23 Jan,08:30,Japan,BoJ Interest Rate Decision,★★,,0.75%,0.75%
 26 Jan,00:00,India,Market Holiday - Republic Day,★,,,
@@ -25,4 +25,4 @@ Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
 29 Jan,00:30,USA,Fed Interest Rate Decision,★★★,,,3.75%
 29 Jan,19:00,USA,Initial Jobless Claims JAN/24,★★,,,
 31 Jan,07:00,China,NBS Manufacturing PMI JAN,★★,,,50.1
-,,,,,,Update Time:,19-Jan 09:20
+,,,,,,Update Time:,19-Jan 09:30
