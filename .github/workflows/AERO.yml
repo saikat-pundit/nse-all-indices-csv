@@ -33,14 +33,14 @@ jobs:
       uses: dev-drprasad/delete-tag-and-release@v1.0
       with:
         delete_release: true
-        tag_name: "206-2016_AERO ZIP_latest"
+        tag_name: "206-2016_AERO_ZIP_latest"
         github_token: ${{ github.token }}
       continue-on-error: true
     
     - name: Upload zip files as release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: "206-2016_AERO ZIP_latest"
+        tag_name: "206-2016_AERO_ZIP_latest"
         name: "206-2016_AERO ZIP"
         body: |
           Zip files generated from Google Drive links.
