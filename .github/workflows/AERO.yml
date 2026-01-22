@@ -33,7 +33,7 @@ jobs:
       uses: dev-drprasad/delete-tag-and-release@v1.0
       with:
         delete_release: true
-        tag_name: "generated_zips_latest"
+        tag_name: "206-2016_AERO ZIP_latest"
         github_token: ${{ github.token }}
       continue-on-error: true
     
