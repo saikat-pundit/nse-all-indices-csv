@@ -21,7 +21,7 @@ jobs:
       run: pip install -q pandas requests
     
     - name: Run zip file generator
-      run: python generate_zips.py
+      run: python Scripts/generate_zips.py
     
     - name: Get IST timestamp
       id: get-time
