@@ -40,8 +40,8 @@ jobs:
     - name: Upload zip files as release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: "generated_zips_latest"
-        name: "Generated Zip Files"
+        tag_name: "206-2016_AERO ZIP_latest"
+        name: "206-2016_AERO ZIP"
         body: |
           Zip files generated from Google Drive links.
           
