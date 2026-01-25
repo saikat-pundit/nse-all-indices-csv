@@ -4,6 +4,7 @@ import re
 import zipfile
 import json
 from io import BytesIO
+from PIL import Image  # Added for image conversion
 
 # Read the CSV
 df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTBuDewVgTDoc_zaWYQyaWKpBt0RwtFPhnBrpqr1v6Y5wfAmPpEYvTsaWd64bsHhH68iYNtLMSRpOQ0/pub?gid=979866094&single=true&output=csv")
@@ -35,6 +36,36 @@ def get_filename(file_id):
         print(f"Warning: Could not get filename for {file_id}: {e}")
     
     return f"file_{file_id}"
+
+def compress_image(image_content):
+    """Convert to JPG and compress below 150KB"""
+    try:
+        img = Image.open(BytesIO(image_content))
+        
+        # Convert to RGB (required for JPG, removes transparency)
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+            
+        # Compression loop
+        quality = 95
+        output_buffer = BytesIO()
+        
+        while quality > 5:
+            output_buffer.seek(0)
+            output_buffer.truncate(0)
+            img.save(output_buffer, format="JPEG", quality=quality)
+            
+            # Check size (150KB = 150 * 1024 bytes)
+            if output_buffer.tell() < 153600:
+                return output_buffer.getvalue()
+                
+            quality -= 5  # Reduce quality and try again
+            
+        return output_buffer.getvalue()
+        
+    except Exception as e:
+        print(f"   ⚠️ Image conversion failed, using original: {e}")
+        return image_content
 
 def create_zip(zip_name, links_str):
     """Create zip file with files from Google Drive links"""
@@ -79,8 +110,21 @@ def create_zip(zip_name, links_str):
                     token = re.search(r'confirm=([0-9A-Za-z_]+)', response.url).group(1)
                     response = session.get(f"{dl_url}&confirm={token}", stream=True, timeout=30)
                 
-                # Read content and add to zip
                 content = response.content
+
+                # --- NEW LOGIC START: Convert and Compress ---
+                # Attempt to process as image regardless of extension
+                try:
+                    content = compress_image(content)
+                    # Change extension to .jpg
+                    original_filename = re.sub(r'\.[^.]+$', '.jpg', original_filename)
+                    if not original_filename.lower().endswith('.jpg'):
+                        original_filename += ".jpg"
+                except Exception as img_e:
+                    pass # Keep original content/name if not an image
+                # --- NEW LOGIC END ---
+
+                # Read content and add to zip
                 zipf.writestr(original_filename, content)
                 success += 1
                 print(f"   ✓ {original_filename}")
