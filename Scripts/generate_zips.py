@@ -4,13 +4,14 @@ import re
 import zipfile
 import json
 from io import BytesIO
-from PIL import Image  # Added for image conversion
+from PIL import Image
 
 # Read the CSV
 df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTBuDewVgTDoc_zaWYQyaWKpBt0RwtFPhnBrpqr1v6Y5wfAmPpEYvTsaWd64bsHhH68iYNtLMSRpOQ0/pub?gid=979866094&single=true&output=csv")
 
-# Filter to get only rows from Y2:Z12 (note: pandas is 0-indexed, so rows 1-11)
-data = df.iloc[1:12][[df.columns[24], df.columns[25]]]  # Y is 25th column (index 24), Z is 26th column (index 25)
+# Filter to get only rows from Y2:Z12
+# Fixed indexing: 0 is the first data row (Excel row 2)
+data = df.iloc[0:11][[df.columns[24], df.columns[25]]]  
 data.columns = ['ZIP_FILE_NAME', 'DRIVE_LINKS']
 
 def get_filename(file_id):
@@ -112,7 +113,6 @@ def create_zip(zip_name, links_str):
                 
                 content = response.content
 
-                # --- NEW LOGIC START: Convert and Compress ---
                 # Attempt to process as image regardless of extension
                 try:
                     content = compress_image(content)
@@ -122,7 +122,6 @@ def create_zip(zip_name, links_str):
                         original_filename += ".jpg"
                 except Exception as img_e:
                     pass # Keep original content/name if not an image
-                # --- NEW LOGIC END ---
 
                 # Read content and add to zip
                 zipf.writestr(original_filename, content)
