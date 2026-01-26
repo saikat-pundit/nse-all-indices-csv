@@ -1,9 +1,4 @@
 Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
-08 Jan,19:00,USA,Initial Jobless Claims JAN/03,★★,208K,210K,200K
-09 Jan,19:00,USA,Housing Starts OCT,★★,"1.246M
-",,	1.306M
-09 Jan,19:00,USA,Housing Starts SEP,★★,	1.306M,	1.33M,1.291M
-09 Jan,19:00,USA,Non Farm Payrolls DEC,★★,50K,	60K,56K
 12 Jan,16:00,India,Inflation Rate YoY DEC,★★,1.33%,1.50%,0.71%
 13 Jan,19:00,USA,Inflation Rate YoY DEC,★★,2.70%,2.70%,2.70%
 13 Jan,20:30,USA,New Home Sales OCT,★★,0.737M,0.72M,0.738M
@@ -21,11 +16,12 @@ Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
 23 Jan,08:30,Japan,BoJ Interest Rate Decision,★★,0.75%,0.75%,0.75%
 26 Jan,00:00,India,Market Holiday - Republic Day,★,,,
 28 Jan,16:00,India,Industrial Production YoY DEC,★★,,,6.70%
-29 Jan,00:30,USA,Fed Interest Rate Decision,★★★,,,3.75%
-29 Jan,19:00,USA,Initial Jobless Claims JAN/24,★★,,,
-31 Jan,07:00,China,NBS Manufacturing PMI JAN,★★,,,50.1
+29 Jan,00:30,USA,Fed Interest Rate Decision,★★★,,3.75%,3.75%
+29 Jan,19:00,USA,Initial Jobless Claims JAN/24,★★,,205K,200K
+31 Jan,07:00,China,NBS Manufacturing PMI JAN,★★,,50.2,50.1
 01 Feb,11:00,India,Union Budget 2026,★★★,,,
-05 Feb,18:45,Euro,ECB Interest Rate Decision,★★,,,
+05 Feb,18:45,Euro,ECB Interest Rate Decision,★★,,,2.15%
 05 Feb,19:00,USA,Initial Jobless Claims JAN/31,★★,,,
 06 Feb,10:00,India,RBI Interest Rate Decision,★★★,,,5.25%
-,,,,,,Update Time:,24-Jan 05:20
+06 Feb,19:00,USA,Non Farm Payrolls JAN,★★,,,
+,,,,,,Update Time:,26-Jan 06:00
