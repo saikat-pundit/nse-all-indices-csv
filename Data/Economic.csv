@@ -1,5 +1,4 @@
 Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
-12 Jan,16:00,India,Inflation Rate YoY DEC,★★,1.33%,1.50%,0.71%
 13 Jan,19:00,USA,Inflation Rate YoY DEC,★★,2.70%,2.70%,2.70%
 13 Jan,20:30,USA,New Home Sales OCT,★★,0.737M,0.72M,0.738M
 13 Jan,20:30,USA,New Home Sales SEP,★★,0.738M,,0.711M
@@ -25,4 +24,7 @@ Date,Time,Area,Title,Imp.,Actual,Exp.,Prev.
 06 Feb,10:00,India,RBI Interest Rate Decision,★★★,,,5.25%
 06 Feb,19:00,USA,Non Farm Payrolls JAN,★★,,,
 11 Feb,19:00,USA,Inflation Rate YoY JAN,★★,,,2.70%
-,,,,,,Update Time:,28-Jan 05:23
+12 Feb,16:00,India,Inflation Rate YoY JAN,★★,,,1.33%
+12 Feb,19:00,USA,Initial Jobless Claims FEB/07,★★,,,
+12 Feb,20:30,USA,Existing Home Sales JAN,★★,,,4.35M
+,,,,,,Update Time:,28-Jan 06:00
