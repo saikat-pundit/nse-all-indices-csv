@@ -1,10 +1,9 @@
 name: AERO ZIP
 
 on:
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:
   schedule:
-    - cron: '0 */3 * * *'  # Runs every 3 hours
-
+    - cron: '30 0 * * *'
 jobs:
   generate-zips:
     runs-on: ubuntu-latest
